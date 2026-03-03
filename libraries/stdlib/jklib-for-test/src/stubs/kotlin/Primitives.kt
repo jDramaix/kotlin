@@ -29,6 +29,8 @@ public expect class Byte : Number, Comparable<Byte> {
     public operator fun times(other: Byte): Int
     public operator fun div(other: Byte): Int
     public operator fun rem(other: Byte): Int
+    public operator fun inc(): Byte
+    public operator fun dec(): Byte
 }
 
 public expect class Short : Number, Comparable<Short> {
@@ -57,6 +59,8 @@ public expect class Short : Number, Comparable<Short> {
     public operator fun times(other: Short): Int
     public operator fun div(other: Short): Int
     public operator fun rem(other: Short): Int
+    public operator fun inc(): Short
+    public operator fun dec(): Short
 }
 
 public expect class Int : Number, Comparable<Int> {
@@ -98,6 +102,13 @@ public expect class Int : Number, Comparable<Int> {
     public infix fun or(other: Int): Int
     public infix fun xor(other: Int): Int
     public fun inv(): Int
+    public operator fun inc(): Int
+    public operator fun dec(): Int
+    public operator fun rangeTo(other: Int): IntRange
+}
+
+public class IntRange : Iterable<Int> {
+    public override fun iterator(): Iterator<Int> = TODO()
 }
 
 public expect class Long : Number, Comparable<Long> {
@@ -134,6 +145,8 @@ public expect class Long : Number, Comparable<Long> {
     public infix fun or(other: Long): Long
     public infix fun xor(other: Long): Long
     public fun inv(): Long
+    public operator fun inc(): Long
+    public operator fun dec(): Long
 }
 
 public expect class Float : Number, Comparable<Float> {
@@ -165,6 +178,8 @@ public expect class Float : Number, Comparable<Float> {
     public operator fun times(other: Float): Float
     public operator fun div(other: Float): Float
     public operator fun rem(other: Float): Float
+    public operator fun inc(): Float
+    public operator fun dec(): Float
 }
 
 public expect class Double : Number, Comparable<Double> {
@@ -196,4 +211,6 @@ public expect class Double : Number, Comparable<Double> {
     public operator fun times(other: Double): Double
     public operator fun div(other: Double): Double
     public operator fun rem(other: Double): Double
+    public operator fun inc(): Double
+    public operator fun dec(): Double
 }

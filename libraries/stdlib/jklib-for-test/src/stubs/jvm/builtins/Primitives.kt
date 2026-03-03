@@ -28,6 +28,8 @@ public actual class Byte : Number(), Comparable<Byte> {
     public actual operator fun times(other: Byte): Int = 0
     public actual operator fun div(other: Byte): Int = 0
     public actual operator fun rem(other: Byte): Int = 0
+    public actual operator fun inc(): Byte = this
+    public actual operator fun dec(): Byte = this
 }
 
 public actual class Short : Number(), Comparable<Short> {
@@ -55,6 +57,8 @@ public actual class Short : Number(), Comparable<Short> {
     public actual operator fun times(other: Short): Int = 0
     public actual operator fun div(other: Short): Int = 0
     public actual operator fun rem(other: Short): Int = 0
+    public actual operator fun inc(): Short = this
+    public actual operator fun dec(): Short = this
 }
 
 public actual class Int : Number(), Comparable<Int> {
@@ -95,6 +99,9 @@ public actual class Int : Number(), Comparable<Int> {
     public actual infix fun or(other: Int): Int = 0
     public actual infix fun xor(other: Int): Int = 0
     public actual fun inv(): Int = 0
+    public actual operator fun inc(): Int = this
+    public actual operator fun dec(): Int = this
+    public actual operator fun rangeTo(other: Int): IntRange = TODO()
 }
 
 public actual class Long : Number(), Comparable<Long> {
@@ -130,6 +137,8 @@ public actual class Long : Number(), Comparable<Long> {
     public actual infix fun or(other: Long): Long = 0
     public actual infix fun xor(other: Long): Long = 0
     public actual fun inv(): Long = 0
+    public actual operator fun inc(): Long = this
+    public actual operator fun dec(): Long = this
 }
 
 public actual class Float : Number(), Comparable<Float> {
@@ -160,6 +169,8 @@ public actual class Float : Number(), Comparable<Float> {
     public actual operator fun times(other: Float): Float = 0.0F
     public actual operator fun div(other: Float): Float = 0.0F
     public actual operator fun rem(other: Float): Float = 0.0F
+    public actual operator fun inc(): Float = this
+    public actual operator fun dec(): Float = this
 }
 
 public actual class Double : Number(), Comparable<Double> {
@@ -190,4 +201,6 @@ public actual class Double : Number(), Comparable<Double> {
     public actual operator fun times(other: Double): Double = 0.0
     public actual operator fun div(other: Double): Double = 0.0
     public actual operator fun rem(other: Double): Double = 0.0
+    public actual operator fun inc(): Double = this
+    public actual operator fun dec(): Double = this
 }
