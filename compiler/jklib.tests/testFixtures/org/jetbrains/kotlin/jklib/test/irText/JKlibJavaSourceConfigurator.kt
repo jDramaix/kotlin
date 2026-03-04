@@ -3,6 +3,7 @@ package org.jetbrains.kotlin.jklib.test.irText
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoot
 import org.jetbrains.kotlin.cli.jvm.config.configureJdkClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.test.TestJdkKind
@@ -45,14 +46,32 @@ class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfi
         val withReflect = JvmEnvironmentConfigurationDirectives.WITH_REFLECT in module.directives
 
         if (withReflect) {
-            System.getProperty("kotlin.reflect.jar")?.let { configuration.addJvmClasspathRoot(File(it)) }
+            throw org.opentest4j.TestAbortedException("WITH_REFLECT is not supported in JKlib tests")
         }
 
         configuration.configureJdkClasspathRoots()
 
         val javaFiles = module.files.filter { it.name.endsWith(".java") }
         if (javaFiles.isEmpty()) return
+        
         javaFiles.forEach { testServices.sourceFileProvider.getOrCreateRealFileForSourceFile(it) }
-        configuration.addJavaSourceRoot(testServices.sourceFileProvider.getJavaSourceDirectoryForModule(module))
+        
+        val javaDir = testServices.sourceFileProvider.getJavaSourceDirectoryForModule(module)
+        val jvmClasspathRoots = configuration.jvmClasspathRoots.map { it.absolutePath }
+        
+        val javaFilesReal = javaFiles.map { testServices.sourceFileProvider.getOrCreateRealFileForSourceFile(it) }
+
+        if (JvmEnvironmentConfigurationDirectives.PROVIDE_JAVA_AS_BINARIES !in registeredDirectives) {
+             throw org.opentest4j.TestAbortedException("JKlib does not support Java/Kotlin cross-compilation. Please use PROVIDE_JAVA_AS_BINARIES")
+        }
+
+        val compiledJar = org.jetbrains.kotlin.test.MockLibraryUtil.compileJavaFilesLibraryToJar(
+            javaDir.path,
+            "${module.name}-java-binaries",
+            extraClasspath = jvmClasspathRoots,
+            assertions = org.jetbrains.kotlin.test.services.JUnit5Assertions,
+            useJava11 = true // Requires jdk.11.home to be set in build.gradle.kts
+        )
+        configuration.addJvmClasspathRoot(compiledJar)
     }
 }

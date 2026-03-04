@@ -26,7 +26,9 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 class BackendCliJKlibFacade(testServices: TestServices) : BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
     override fun transform(module: org.jetbrains.kotlin.test.model.TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
         // We accept IrBackendInput, but we expect it to be from our pipeline
-        require(inputArtifact is Fir2IrCliBasedOutputArtifact<*>)
+        if (inputArtifact !is Fir2IrCliBasedOutputArtifact<*>) {
+            return null // Skip gracefully for non-CLI FIR artifacts (e.g. from K1 tests)
+        }
         val cliArtifact = inputArtifact.cliArtifact
         require(cliArtifact is JKlibFir2IrPipelineArtifact)
 

@@ -10,6 +10,7 @@ dependencies {
     testFixturesApi(testFixtures(project(":generators:test-generator")))
     testFixturesApi(testFixtures(project(":compiler:tests-common")))
     testFixturesApi(testFixtures(project(":compiler:tests-integration")))
+    testFixturesApi(testFixtures(project(":compiler:tests-compiler-utils")))
     testFixturesImplementation(project(":compiler:cli-jklib"))
 
     testFixturesCompileOnly(intellijCore())
@@ -93,5 +94,11 @@ tasks.withType<Test>().configureEach {
         systemProperty("kotlin.stdlib.jvm.ir.jar", stdlibDir.get().file("stdlib.jar").asFile.absolutePath)
         systemProperty("kotlin.reflect.jar", kotlinReflectFiles.singleFile.absolutePath)
         systemProperty("kotlin.stdlib.jar", kotlinStdlibFiles.singleFile.absolutePath)
+        
+        val jdk11Home = System.getProperty("jdk.11.home") ?: System.getProperty("java.home") ?: ""
+        if (jdk11Home.isNotEmpty()) {
+            systemProperty("JDK_11_0", jdk11Home)
+            systemProperty("JDK_1_8", jdk11Home)
+        }
     }
 }
