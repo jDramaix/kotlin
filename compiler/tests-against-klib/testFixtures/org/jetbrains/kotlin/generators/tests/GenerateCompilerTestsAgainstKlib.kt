@@ -22,9 +22,6 @@ fun main(args: Array<String>) {
             testClass<AbstractCompileKotlinAgainstKlibTest> {
                 model("codegen/boxKlib", targetBackend = TargetBackend.JVM_IR)
             }
-            testClass<AbstractJKlibTest> {
-                model("codegen/jklib", targetBackend = TargetBackend.JVM_IR)
-            }
         }
     }
 
