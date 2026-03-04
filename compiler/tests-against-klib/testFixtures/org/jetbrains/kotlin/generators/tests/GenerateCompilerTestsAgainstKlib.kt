@@ -6,16 +6,11 @@
 package org.jetbrains.kotlin.generators.tests
 
 import org.jetbrains.kotlin.codegen.ir.AbstractCompileKotlinAgainstKlibTest
-
 import org.jetbrains.kotlin.generators.dsl.junit4.generateTestGroupSuiteWithJUnit4
-import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
-import org.jetbrains.kotlin.generators.util.TestGeneratorUtil
 import org.jetbrains.kotlin.test.TargetBackend
 
 fun main(args: Array<String>) {
     val testsRoot = args[0]
-    val mainClassName = TestGeneratorUtil.getMainClassName()
-
     generateTestGroupSuiteWithJUnit4(args) {
         testGroup(testsRoot, "compiler/testData") {
             testClass<AbstractCompileKotlinAgainstKlibTest> {
