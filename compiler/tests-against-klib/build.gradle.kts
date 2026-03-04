@@ -17,7 +17,6 @@ dependencies {
     testCompileOnly(libs.junit4)
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly(toolsJarApi())
 }
 
 sourceSets {
@@ -29,7 +28,6 @@ projectTests {
     // only 2 files are really needed:
     // - compiler/testData/codegen/boxKlib/properties.kt
     // - compiler/testData/codegen/boxKlib/simple.kt
-    testData(project(":compiler").isolated, "testData/codegen/boxKlib")
     testData(project(":compiler").isolated, "testData/codegen/boxKlib")
 
     withJvmStdlibAndReflect()
