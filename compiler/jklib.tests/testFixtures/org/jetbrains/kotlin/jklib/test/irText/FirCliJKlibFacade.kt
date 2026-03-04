@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.jklib.test.runners
+package org.jetbrains.kotlin.jklib.test.irText
 
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibConfigurationPhase
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibFrontendPipelineArtifact

@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.jklib.test.runners
+package org.jetbrains.kotlin.jklib.test.irText
 
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.config.AnalysisFlag
@@ -17,7 +17,6 @@ import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
 import java.io.File
 
 class JKlibSourceRootConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
-    // ... overrides ...
 
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         module.files.filter { it.name.endsWith(".kt") || it.name.endsWith(".kts") }.forEach { testFile ->

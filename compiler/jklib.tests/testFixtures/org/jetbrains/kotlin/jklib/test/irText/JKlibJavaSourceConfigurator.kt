@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.jklib.test.runners
+package org.jetbrains.kotlin.jklib.test.irText
 
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoot
@@ -14,7 +14,14 @@ import org.jetbrains.kotlin.test.services.sourceFileProvider
 import org.jetbrains.kotlin.test.util.KtTestUtil
 import java.io.File
 
+import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.model.DirectivesContainer
+
 class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
+    override val directiveContainers: List<DirectivesContainer>
+        get() = listOf(JvmEnvironmentConfigurationDirectives)
+
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         val registeredDirectives = module.directives
         val jdkKind = JvmEnvironmentConfigurator.extractJdkKind(registeredDirectives)
@@ -24,27 +31,23 @@ class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfi
             TestJdkKind.MOCK_JDK, TestJdkKind.MODIFIED_MOCK_JDK -> {
                 configuration.put(JVMConfigurationKeys.NO_JDK, true)
                 var home = File(KtTestUtil.getHomeDirectory())
-                if (home.name == "tests-against-klib") {
+                if (home.name == "jklib.tests") {
                      home = home.parentFile.parentFile
                 }
                 val mockJdkPath = File(home, "compiler/testData/mockJDK/jre/lib/rt.jar")
-                
-                try {
-                    val tempJdk = File.createTempFile("mock-rt", ".jar")
-                    tempJdk.deleteOnExit()
-                    java.security.AccessController.doPrivileged(java.security.PrivilegedAction {
-                        mockJdkPath.copyTo(tempJdk, overwrite = true)
-                    })
-                    configuration.addJvmClasspathRoot(tempJdk)
-                } catch (e: Throwable) {
-                    // Fallback or ignore. The whitelist should prevent AccessControlException, 
-                    // and doPrivileged ensures we can copy it if needed.
-                }
+                configuration.addJvmClasspathRoot(mockJdkPath)
             }
             else -> {
                 JvmEnvironmentConfigurator.getJdkClasspathRoot(jdkKind)?.let { configuration.addJvmClasspathRoot(it) }
             }
         }
+
+        val withReflect = JvmEnvironmentConfigurationDirectives.WITH_REFLECT in module.directives
+
+        if (withReflect) {
+            System.getProperty("kotlin.reflect.jar")?.let { configuration.addJvmClasspathRoot(File(it)) }
+        }
+
         configuration.configureJdkClasspathRoots()
 
         val javaFiles = module.files.filter { it.name.endsWith(".java") }

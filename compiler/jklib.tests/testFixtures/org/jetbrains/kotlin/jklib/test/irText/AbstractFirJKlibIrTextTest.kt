@@ -1,4 +1,4 @@
-package org.jetbrains.kotlin.jklib.test.runners
+package org.jetbrains.kotlin.jklib.test.irText
 
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.FirParser
@@ -9,8 +9,8 @@ import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
 import org.jetbrains.kotlin.test.model.*
 
 abstract class AbstractFirJKlibIrTextTest(
-    val parser: FirParser
-) : AbstractJKlibIrTextTest<FirOutputArtifact>(FrontendKinds.FIR) {
+    val parser: FirParser = FirParser.Psi
+) : AbstractJKlibIrTextTestBase<FirOutputArtifact>(FrontendKinds.FIR) {
     override val frontendFacade: Constructor<FrontendFacade<FirOutputArtifact>>
         get() = ::FirCliJKlibFacade
     override val frontendToBackendConverter: Constructor<Frontend2BackendConverter<FirOutputArtifact, IrBackendInput>>
