@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.test.builders.klibArtifactsHandlersStep
 import org.jetbrains.kotlin.utils.bind
 
 import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
+import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
 
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 
@@ -62,7 +63,7 @@ abstract class AbstractJKlibIrTextTestBase<FrontendOutput : ResultingArtifact.Fr
             ::CoroutineHelpersSourceFilesProvider,
         )
 
-        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper /*, ::MuteListSkipper */)
+        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper /*, ::MuteListSkipper */)
 
         facadeStep(frontendFacade)
         firHandlersStep {
@@ -100,116 +101,120 @@ class WithStdlibSkipper(testServices: org.jetbrains.kotlin.test.services.TestSer
     }
 }
 
+class WithReflectSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) : org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+    override val directiveContainers: List<org.jetbrains.kotlin.test.directives.model.DirectivesContainer>
+        get() = listOf(JvmEnvironmentConfigurationDirectives)
+
+    override fun shouldSkipTest(): Boolean {
+        return testServices.moduleStructure.allDirectives.contains(JvmEnvironmentConfigurationDirectives.WITH_REFLECT)
+    }
+}
+
 class MuteListSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) : org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
     // TODO: joseefort - fix minimal stdlib to get all tests to match
     companion object {
         private val mutedTests = setOf(
-            "testActualizeInterfaceAsAny", // [IR mismatch] Actual data differs from file content
-            "testAnnotationRetentions", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testAnnotationRetentionsMultiModule", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testArgumentMappedWithError", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testArrayAssignment", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testArrayAugmentedAssignment1", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testArrayInAnnotationArguments", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testArraysFromBuiltins", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testAssignmentOperator", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testBadBreakContinue", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testBoundCallableReferences", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testBreakContinueInWhen", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testCapturedTypeInFakeOverride", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testClassLiteralInAnnotation", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testClasses", // [IR mismatch] Actual data differs from file content
-            "testClassesWithAnnotations", // [IR mismatch] Actual data differs from file content
-            "testCoercionInLoop", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testConstExpressionsInAnnotationArguments", // [Backend Crash/IllegalStateException] CALL 'public final fun <get-ONE> (): kotlin.Int declared in <root>' type=kotlin....
-            "testConstFromBuiltins", // [Backend Crash/IllegalStateException] CALL 'public final fun <get-MIN_VALUE> (): kotlin.Int declared in kotlin.Int.Com...
-            "testConstValInitializers", // [Backend Crash/IllegalStateException] CALL 'public final fun plus (other: kotlin.Int): kotlin.Int [expect,operator] de...
-            "testContextWithAnnotation", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testDefinitelyNotNullWithIntersection1", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testDelegateForExtPropertyInClass", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testDelegatedPropertyAccessorsWithAnnotations", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testEnumClassModality", // [IR mismatch] Actual data differs from file content
-            "testEnumEntriesWithAnnotations", // [IR mismatch] Actual data differs from file content
-            "testEnumEntry", // [IR mismatch] Actual data differs from file content
-            "testEnumEntryAsReceiver", // [IR mismatch] Actual data differs from file content
-            "testEnumEntryReferenceFromEnumEntryClass", // [IR mismatch] Actual data differs from file content
-            "testEnumWithMultipleCtors", // [IR mismatch] Actual data differs from file content
-            "testEnumsInAnnotationArguments", // [IR mismatch] Actual data differs from file content
-            "testExhaustiveWhenElseBranch", // [IR mismatch] Actual data differs from file content
-            "testExpectClassInherited", // [IR mismatch] Actual data differs from file content
-            "testExpectIntersectionOverride", // [IR mismatch] Actual data differs from file content
-            "testExpectMemberInNotExpectClass", // [IR mismatch] Actual data differs from file content
-            "testExpectedEnumClass", // [IR mismatch] Actual data differs from file content
-            "testExpectedFun", // [IR mismatch] Actual data differs from file content
-            "testExpectedSealedClass", // [IR mismatch] Actual data differs from file content
-            "testExtensionLambda", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testFileAnnotations", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testFirBuilder", // [IR mismatch] Actual data differs from file content
-            "testFloatingPointCompareTo", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testFloatingPointLess", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testGenericAnnotationClasses", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testGenericClassInDifferentModule", // [IR mismatch] Actual data differs from file content
-            "testGenericConstructorCallWithTypeArguments", // [IR mismatch] Actual data differs from file content
-            "testGenericDelegatedProperty", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testGenericMember", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testGenericPropertyRef", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testGenericPropertyReferenceType", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIfWithArrayOperation", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIfWithLoop", // [IR mismatch] Actual data differs from file content
-            "testImportedFromObject", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIncrementDecrement", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIndependentBackingFieldType", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testInitValInLambda", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIntegerCoercionToT", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testInternalOverrideCrossModule", // [IR mismatch] Actual data differs from file content
-            "testInternalOverrideWithFriendModule", // [IR mismatch] Actual data differs from file content
-            "testInternalPotentialFakeOverride", // [IR mismatch] Actual data differs from file content
-            "testInternalPotentialOverride", // [IR mismatch] Actual data differs from file content
-            "testInternalWithPublishedApiOverride", // [IR mismatch] Actual data differs from file content
-            "testIntersectionType1", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testIntersectionWithPublishedApiOverride", // [IR mismatch] Actual data differs from file content
+            
+            // Basic Reflect Classes not included in minimal stdlib failures
+           "testBoundCallableReferences", // Missing class/es: kotlin.reflect.KProperty0
+           "testClassLiteralInAnnotation", // Missing class/es: kotlin.reflect.KClass
+           "testConstExpressionsInAnnotationArguments", // Missing class/es: kotlin.reflect.KType
+           "testConstFromBuiltins", // Missing class/es: kotlin.reflect.KType
+           "testConstValInitializers", // Missing class/es: kotlin.reflect.KType
+           "testDelegateForExtPropertyInClass", // Missing class/es: kotlin.reflect.KProperty, kotlin.reflect.KProperty2
+           "testDelegatedPropertyAccessorsWithAnnotations", // Missing class/es: kotlin.reflect.KProperty0, kotlin.reflect.KMutableProperty0
+           "testGenericDelegatedProperty", // Missing class/es: kotlin.reflect.KMutableProperty1
+           "testGenericMember", // Missing class/es: kotlin.reflect.KProperty1
+           "testGenericPropertyRef", // Missing class/es: kotlin.reflect.KProperty1, kotlin.reflect.KMutableProperty1
+           "testGenericPropertyReferenceType", // Missing class/es: kotlin.reflect.KMutableProperty, kotlin.reflect.KMutableProperty0
+           "testImportedFromObject", // Missing class/es: kotlin.reflect.KProperty0
+           "testKt28006", // Missing class/es: kotlin.reflect.KType
+           "testKt52677", // Missing class/es: kotlin.annotation.Target, kotlin.reflect.KClass, kotlin.annotation.AnnotationTarget
+           "testLocal", // Missing class/es: kotlin.reflect.KProperty0
+           "testMember", // Missing class/es: kotlin.reflect.KProperty1
+           "testMemberExtension", // Missing class/es: kotlin.reflect.KProperty2
+           "testTopLevel", // Missing class/es: kotlin.reflect.KProperty0
+            // Basic Reflect Classes not included in minimal stdlib failures
+
+            // Symbol resolution compilation failures due to stdlib mismatches
+            "testAnnotationRetentions", // Missing standard library annotations (@Retention and its values SOURCE, BINARY, RUNTIME) on the classpath.
+            "testAnnotationRetentionsMultiModule", // Missing standard library annotations (@Retention, @Target, and their values) in a multi-module context.
+            "testArgumentMappedWithError", // Unresolved TODO() call, likely due to a missing or inaccessible kotlin.util package.
+            "testArrayAssignment", // Resolution ambiguity for intArrayOf and missing set operator.
+            "testArrayAugmentedAssignment1", // Overload resolution ambiguity for intArrayOf.
+            "testArrayInAnnotationArguments", // Ambiguous resolution of intArrayOf and arrayOf within annotation arguments.
+            "testArraysFromBuiltins", // Failure to access IntIterator, causing the IntArray.iterator() call to fail.
+            "testAssignmentOperator", // Resolution ambiguity for arrayOf when initializing an array property.
+            "testBadBreakContinue", // Invalid break or continue statements that cross function/class boundaries or are placed outside of loops.
+            "testBreakContinueInWhen", // Missing or inaccessible IntIterator during a for-loop iteration over a range.
+            "testCapturedTypeInFakeOverride", // Unresolved reference to TODO() in a method that overrides a generic class member with a captured type.
+            "testCoercionInLoop", // Missing DoubleIterator for iterating over a DoubleArray.
+            "testContextWithAnnotation", // Unresolved annotation targets (TYPE, VALUE_PARAMETER, FUNCTION, PROPERTY) and AnnotationTarget.
+            "testDefinitelyNotNullWithIntersection1", // Overload resolution ambiguity for arrayOf and type inference failure for foo.
+            "testExtensionLambda", // Unresolved reference to TODO() within an extension lambda.
+            "testFileAnnotations", // Unresolved reference to Target and AnnotationTarget in file-level annotations.
+            "testFloatingPointCompareTo", // Unresolved reference to TODO() in floating-point comparison logic.
+            "testFloatingPointLess", // Unresolved reference to TODO() in floating-point inequality checks.
+            "testGenericAnnotationClasses", // Unresolved reference to Retention, Target, and associated standard library constants in generic annotations.
+            "testIfWithArrayOperation", // Overload resolution ambiguity for intArrayOf within an if expression.
+            "testIncrementDecrement", // Missing IntIterator and loop methods (next, hasNext) during increment/decrement operations in a loop.
+            "testIndependentBackingFieldType", // Unresolved reference to TODO() in a property with an independent backing field type.
+            "testInitValInLambda", // Unresolved reference to TODO() when initializing a property within a lambda.
+            "testIntegerCoercionToT", // Unresolved reference to TODO() during integer-to-generic-type coercion.
+            "testIntersectionType1", // Overload resolution ambiguity for arrayOf when working with intersection types.
+            "testKt27005", // Unresolved Target and AnnotationTarget when using @Target on an annotation class.
+            "testKt37570", // Unresolved apply, type mismatch, and captured variable initialization constraints.
+            "testKt37779", // Overload resolution ambiguity for arrayOf.
+            "testKt46069", // Unresolved reference for standard library function let.
+            "testKt50028", // Unresolved reference for NotImplementedError, indicating a missing standard exception class.
+            "testLambdaWithParameterName", // Unresolved TODO() call within a higher-order function.
+            "testMultipleImplicitReceivers", // Unresolved references for with and member functions when using multiple implicit receivers.
+            "testNewInferenceFixationOrder1", // Unresolved TODO() during complex type inference fixation.
+            "testNoErrorTypeAfterCaptureApproximation", // Unresolved TODO() following generic type capture approximation.
+            "testNullableAnyAsIntToDouble", // Argument type mismatch in floating-point comparison: expected Int, got Double.
+            "testSpecialAnnotationsMetadata", // Unresolved internal compiler annotations (Exact, NoInfer) from kotlin.internal.
+            "testSpreadOperatorInAnnotationArguments", // Overload resolution ambiguity for arrayOf when used with the spread operator in annotations.
+            "testTargetOnPrimaryCtorParameter", // Unresolved Target, AnnotationTarget, and VALUE_PARAMETER, typical of missing annotation infrastructure.
+            "testTypeAliasesWithAnnotations", // Unresolved annotation targets and applicability errors specific to typealias declarations.
+            "testTypeParameterBounds", // Missing standard annotation classes and applicability issues when annotating type parameters and their bounds.
+            "testTypeParametersWithAnnotations", // Unresolved annotation references and applicability failures for type parameter annotations.
+            "testVararg", // Overload resolution ambiguity for arrayOf and invalid spread operator usage on nullable types.
+            "testVarargWithImplicitCast", // Overload resolution ambiguity for intArrayOf in the presence of implicit type casts.
+            "testWhenReturnUnit", // Unresolved TODO() call within a when expression branch.
+            "testWhenWithSubjectVariable", // Unresolved reference contains, preventing the use of in checks within when expressions.
+            "testWithVarargViewedAsArray", // Missing IntIterator and associated loop methods (next, hasNext), preventing iteration over primitive arrays.
+            // End of Symbol resolution compilation failures due to stdlib mismatches
+
             "testJavaRecordComponentAccess", // [Other Error] at org.jetbrains.kotlin.test.util.KtTestUtil.getJdkHome(KtTestUtil.java:143)
-            "testKotlinInnerClass", // [IR mismatch] Actual data differs from file content
-            "testKt27005", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testKt28006", // [Backend Crash/IllegalStateException] STRING_CONCATENATION type=kotlin.String
-            "testKt37570", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testKt37779", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testKt46069", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testKt47245", // [IR mismatch] Actual data differs from file content
-            "testKt50028", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testKt52677", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testLambdaWithParameterName", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testLateinitPropertiesSeparateModule", // [IR mismatch] Actual data differs from file content
-            "testLocal", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testMember", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testMemberExtension", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testMultiList", // [IR mismatch] Actual data differs from file content
-            "testMultipleImplicitReceivers", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testNewInferenceFixationOrder1", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testNoErrorTypeAfterCaptureApproximation", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testNullableAnyAsIntToDouble", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testObjectAsCallable", // [IR mismatch] Actual data differs from file content
-            "testReflectionLiterals", // [IR mismatch] Actual data differs from file content
-            "testSamConversionClassInProjection", // [IR mismatch] Actual data differs from file content
-            "testSimpleOperators", // [IR mismatch] Actual data differs from file content
-            "testSpecialAnnotationsMetadata", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testSpreadOperatorInAnnotationArguments", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testStaticOverrideOnKJJ", // [IR mismatch] Actual data differs from file content
-            "testSubstitutionFakeOverrides2", // [IR mismatch] Actual data differs from file content
-            "testTargetOnPrimaryCtorParameter", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testTemporaryInEnumEntryInitializer", // [IR mismatch] Actual data differs from file content
-            "testTopLevel", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testTypeAliasesWithAnnotations", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testTypeParameterBounds", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testTypeParameterClassLiteral", // [IR mismatch] Actual data differs from file content
-            "testTypeParametersWithAnnotations", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testValues", // [IR mismatch] Actual data differs from file content
-            "testVararg", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testVarargWithImplicitCast", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testWhenReturnUnit", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testWhenSmartCastToEnum", // [IR mismatch] Actual data differs from file content
-            "testWhenWithSubjectVariable", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
-            "testWithVarargViewedAsArray", // [Backend Crash/IllegalStateException] java.lang.IllegalStateException: CLI phase failed with errors:
+
+            //IR mismatch failures
+            "testClasses", // EnumEntries<T> simplified to raw EnumEntries (removal of type argument).
+            "testClassesWithAnnotations", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumClassModality", // EnumEntries<T> simplified to raw EnumEntries across multiple enum definitions.
+            "testEnumEntriesWithAnnotations", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumEntry", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumEntryAsReceiver", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumEntryReferenceFromEnumEntryClass", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumWithMultipleCtors", // EnumEntries<T> simplified to raw EnumEntries.
+            "testEnumsInAnnotationArguments", // EnumEntries<T> simplified to raw EnumEntries.
+            "testExhaustiveWhenElseBranch", // EnumEntries<T> simplified to raw EnumEntries.
+            "testGenericConstructorCallWithTypeArguments", // Updated times call argument from Int to Long (3L).
+            "testIfWithLoop", // IntIterator generalized to Iterator<Int> in FOR_LOOP ranges.
+            "testKotlinInnerClass", // Added [expect] tags to Any methods and constructors.
+            "testKt47245", // Generalized IntIterator to Iterator<Int> in FOR_LOOP.
+            "testLateinitPropertiesSeparateModule", // Removed module markers from the diff output.
+            "testMultiList", // Collection interface methods use Collection as receiver type instead of List.
+            "testObjectAsCallable", // EnumEntries<T> simplified to raw EnumEntries.
+            "testReflectionLiterals", // KClass<T> references reported as IrErrorType due to inconsistent type arguments.
+            "testSamConversionClassInProjection", // Added IMPLICIT_CAST for Function2 and updated SAM_CONVERSION types.
+            "testSimpleOperators", // kotlin.ranges.IntRange simplified to kotlin.IntRange.
+            "testStaticOverrideOnKJJ", // Removed ACCIDENTAL_OVERRIDE diagnostics from the test data.
+            "testSubstitutionFakeOverrides2", // Removed a redundant FAKE_OVERRIDE entry for foo.
+            "testTemporaryInEnumEntryInitializer", // EnumEntries<T> simplified to raw EnumEntries.
+            "testTypeParameterClassLiteral", // KClass<T> references for reified type parameters reported as IrErrorType.
+            "testValues", // EnumEntries<T> simplified to raw EnumEntries.
+            "testWhenSmartCastToEnum", // EnumEntries<T> simplified to raw EnumEntries.
+            // End of IR mismatches
         )
     }
 
