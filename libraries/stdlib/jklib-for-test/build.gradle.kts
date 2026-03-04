@@ -9,7 +9,6 @@ project.configureJvmToolchain(JdkMajorVersion.JDK_1_8)
 
 val stdlibProjectDir = file("$rootDir/libraries/stdlib")
 
-
 dependencies {
     implementation(project(":compiler:cli-jklib"))
     implementation(commonDependency("org.jetbrains.kotlin:kotlin-reflect")) {
@@ -19,51 +18,6 @@ dependencies {
     implementation(libs.intellij.fastutil)
     implementation(commonDependency("org.codehaus.woodstox:stax2-api"))
     implementation(commonDependency("com.fasterxml:aalto-xml"))
-}
-
-val copySources by tasks.registering(Sync::class) {
-    dependsOn(":prepare:build.version:writeStdlibVersion")
-    into(layout.buildDirectory.dir("src/genesis-all"))
-    
-    // Common Sources
-    from(stdlibProjectDir.resolve("common/src")) {
-        include("**/*")
-        into("common/common")
-    }
-    from(stdlibProjectDir.resolve("src")) {
-        include("**/*")
-        into("common/src")
-    }
-    from(stdlibProjectDir.resolve("unsigned/src")) {
-        include("**/*")
-        into("common/unsigned")
-    }
-
-    // JVM Sources
-    from(stdlibProjectDir.resolve("jvm/src")) {
-        include("**/*")
-        into("jvm/src")
-    }
-    from(stdlibProjectDir.resolve("jvm/runtime")) {
-        include("**/*")
-        into("jvm/runtime")
-    }
-    from(stdlibProjectDir.resolve("jvm/builtins")) {
-        include("**/*")
-        into("jvm/builtins")
-    }
-    from(stdlibProjectDir.resolve("jvm/compileOnly")) {
-        include("**/*")
-        into("jvm/compileOnly")
-    }
-    
-    // Stub Sources
-    from(project.file("src/stubs")) {
-        include("**/*")
-        into("jvm/stubs")
-    }
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 val outputKlib = layout.buildDirectory.file("libs/kotlin-stdlib-jvm-ir.klib")
@@ -122,6 +76,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             "kotlin/contracts/ContractBuilder.kt",
             "kotlin/contracts/Effect.kt",
             "kotlin/Annotations.kt", // Defines SinceKotlin, Deprecated, etc.
+            "kotlin/ExceptionsH.kt",
         )
         into("common/src")
     }
@@ -152,6 +107,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             "kotlin/collections/TypeAliases.kt",
             "kotlin/enums/EnumEntriesJVM.kt",
             "kotlin/io/Serializable.kt",
+            "kotlin/Annotations.kt", // Defines SinceKotlin, Deprecated, etc.
         )
         into("jvm/src")
     }
@@ -164,25 +120,8 @@ val copyMinimalSources by tasks.registering(Sync::class) {
         into("jvm/builtins")
     }
 
-
-    
-    // Stub sources - include if they are needed for minimal too, or maybe not?
-    // jvm-minimal-for-test includes 'jvm-src/minimalAtomics.kt' etc. which are LOCAL to that project.
-    // jvm-ir-for-test has 'src/stubs/kotlin/jvm/internal/Functions.kt' etc.
-    // The user said "same srcs", implying the ones from jvm-minimal-for-test?
-    // Or just the stdlib subset?
-    // jvm-minimal-for-test has local sources: "jvm-src" and "common-src".
-    // We probably need to include THOSE local sources from jvm-minimal-for-test if checking "same srcs".
-    // BUT jvm-ir-for-test might not have access to jvm-minimal-for-test sources easily without path hacking or duplication.
-    // User said "We can use the full stdlib in the classpath... jvm-minimal only contains kt classes".
-    // Let's assume for now we just want the subset of STDLIB sources.
-    // If we need the local stubs from jvm-minimal-for-test, we might need to copy them or reference them.
-    // Let's copy the stdlib subset first.
-    
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-
-val outputMinimalKlib = layout.buildDirectory.file("libs/kotlin-stdlib-jvm-minimal-ir.klib")
 
 // Helper to separate Java compilation
 fun createJavaCompilationTask(sourceTask: TaskProvider<Sync>): TaskProvider<Jar> {
@@ -223,8 +162,6 @@ fun createJavaCompilationTask(sourceTask: TaskProvider<Sync>): TaskProvider<Jar>
         destinationDirectory.set(layout.buildDirectory.dir("libs"))
     }
 }
-
-val jarJava = createJavaCompilationTask(copySources)
 
 fun JavaExec.configureJklibCompilation(
     sourceTask: TaskProvider<Sync>,
@@ -309,26 +246,22 @@ fun JavaExec.configureJklibCompilation(
     }
 }
 
+val fullStdlibJarProvider = project(":kotlin-stdlib").tasks.named("jvmJar", Jar::class).flatMap { it.archiveFile }
+
 val compileStdlib by tasks.registering(JavaExec::class) {
     val javaToolchains = project.extensions.getByType(JavaToolchainService::class.java)
     javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(8))
     })
-    configureJklibCompilation(copySources, outputKlib, jarJava.flatMap { it.archiveFile })
+    configureJklibCompilation(copyMinimalSources, outputKlib, fullStdlibJarProvider)
+    
+    // Suppress "Actual without expect" errors typical in minimal stdlib
+    args("-nowarn") 
 }
 
-val fullStdlibJarProvider = project(":kotlin-stdlib").tasks.named("jvmJar", Jar::class).flatMap { it.archiveFile }
-
-val compileMinimalStdlib by tasks.registering(JavaExec::class) {
-    val javaToolchains = project.extensions.getByType(JavaToolchainService::class.java)
-    javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(8))
-    })
-    // Use the full stdlib jar as classpath, instead of the locally built jarJava
-    configureJklibCompilation(copyMinimalSources, outputMinimalKlib, fullStdlibJarProvider)
-    
-    // Suppress "Actual without expect" errors typical in minimal stdlib (due to missing common sources)
-    args("-nowarn") 
+// Alias task for compatibility
+val compileMinimalStdlib by tasks.registering {
+    dependsOn(compileStdlib)
 }
 
 // Expose the KLIB artifact
@@ -337,19 +270,16 @@ val distJKlib by configurations.creating {
     isCanBeResolved = false
 }
 
+// Alias configuration for compatibility
 val distMinimalJKlib by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
+    extendsFrom(distJKlib)
 }
 
 artifacts {
     add(distJKlib.name, outputKlib) {
         builtBy(compileStdlib)
     }
-    add(distJKlib.name, jarJava)
-
-    add(distMinimalJKlib.name, outputMinimalKlib) {
-        builtBy(compileMinimalStdlib)
-    }
-    add(distMinimalJKlib.name, fullStdlibJarProvider)
+    add(distJKlib.name, fullStdlibJarProvider)
 }
