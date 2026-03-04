@@ -20,6 +20,8 @@ import org.jetbrains.kotlin.test.builders.irHandlersStep
 import org.jetbrains.kotlin.test.builders.klibArtifactsHandlersStep
 import org.jetbrains.kotlin.utils.bind
 
+import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
+
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
@@ -74,6 +76,9 @@ abstract class AbstractJKlibIrTextTest<FrontendOutput : ResultingArtifact.Fronte
         klibArtifactsHandlersStep()
 
         setupDefaultDirectivesForIrTextTest()
+        defaultDirectives {
+            +CodegenTestDirectives.IGNORE_IR_EXPECT_FLAG
+        }
         configureIrHandlersStep {
             setupIrTextDumpHandlers()
         }

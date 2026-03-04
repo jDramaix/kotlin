@@ -79,6 +79,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
 
     from("src/stubs") {
         include("kotlin/**")
+        include("kotlin/util/**")
         into("common/src")
     }
 
@@ -108,7 +109,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             "kotlin/String.kt",
             "kotlin/Throwable.kt",
             "kotlin/Unit.kt",
-            "kotlin/util/Standard.kt",
+            "kotlin/annotation/Annotations.kt",
             "kotlin/annotations/Multiplatform.kt",
             "kotlin/annotations/WasExperimental.kt",
             "kotlin/annotations/ReturnValue.kt",
@@ -147,6 +148,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
         include(
             "kotlin/ArrayIntrinsics.kt",
             "kotlin/Unit.kt",
+            "kotlin/annotation/Annotations.kt",
             "kotlin/collections/TypeAliases.kt",
             "kotlin/enums/EnumEntriesJVM.kt",
             "kotlin/io/Serializable.kt",

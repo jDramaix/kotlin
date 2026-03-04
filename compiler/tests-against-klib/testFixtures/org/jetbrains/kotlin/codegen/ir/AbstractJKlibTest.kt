@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.utils.PathUtil
 import java.io.File
 import java.nio.file.Paths
 
-@OptIn(ObsoleteTestInfrastructure::class)
+@OptIn(ObsoleteTestInfrastructure::class, org.jetbrains.kotlin.config.CompilerConfiguration.Internals::class)
 abstract class AbstractJKlibTest : AbstractBlackBoxCodegenTest() {
     override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
         compileToKlibAndDeserializeIr(
@@ -34,7 +34,7 @@ abstract class AbstractJKlibTest : AbstractBlackBoxCodegenTest() {
     // We need real (as opposed to virtual) files in order to produce a Klib.
     private fun loadMultiFilesReal(outputDir: String, files: List<TestFile>): List<String> {
         return files.map { testFile ->
-            assert(testFile.name.endsWith(".kt"))
+            require(testFile.name.endsWith(".kt")) { "File must be a .kt file" }
             val ktFile = File(Paths.get(outputDir, testFile.name).toString())
             ktFile.writeText(testFile.content)
             ktFile.toString()
