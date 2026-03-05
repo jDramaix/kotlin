@@ -124,9 +124,10 @@ fun Test.forwardProperties() {
         }
     }
 
-    val allProperties = properties + rootLocalProperties
-
     val prefixForPropertiesToForward = "fd."
+    val filteredProperties: Provider<Map<String, String>> = providers.gradlePropertiesPrefixedBy(prefixForPropertiesToForward)
+    val allProperties = filteredProperties.get() + rootLocalProperties
+
     for ((key, value) in allProperties) {
         if (key is String && key.startsWith(prefixForPropertiesToForward)) {
             systemProperty(key.substring(prefixForPropertiesToForward.length), value!!)
@@ -148,7 +149,7 @@ projectTests {
     }
 
     testTask("invalidationTest", jUnitMode = JUnitMode.JUnit5, skipInLocalBuild = true) {
-        useJsIrBoxTests(version = version, buildDir = layout.buildDirectory)
+        useJsIrBoxTests(buildDir = layout.buildDirectory)
         include("org/jetbrains/kotlin/incremental/*")
         forwardProperties()
     }

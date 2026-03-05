@@ -223,8 +223,6 @@ enum class TestRunnerType {
     NO_EXIT
 }
 
-internal val CINTEROP_SOURCE_EXTENSIONS = setOf("c", "cpp", "m", "mm")
-
 internal class TestCInteropArgs(cinteropArgs: List<String>) : TestCompilerArgs(emptyList(), cinteropArgs) {
     constructor(vararg cinteropArgs: String) : this(cinteropArgs.asList())
 }
@@ -294,7 +292,7 @@ open class TestCompilerArgs(
     }
 }
 
-internal fun parseTestKind(registeredDirectives: RegisteredDirectives): TestKind? {
+fun parseTestKind(registeredDirectives: RegisteredDirectives): TestKind? {
     if (KIND !in registeredDirectives)
         return null // The default is determined by TEST_KIND global property
 

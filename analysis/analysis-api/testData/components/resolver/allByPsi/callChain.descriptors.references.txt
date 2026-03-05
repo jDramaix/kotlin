@@ -43,6 +43,7 @@ KtNameReferenceExpression(34,35): 'a'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -98,6 +99,7 @@ KtNameReferenceExpression(79,80): 'b'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -105,6 +107,7 @@ KtCallExpression(103,109): 'foo(2)'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -118,6 +121,7 @@ KtNameReferenceExpression(103,106): 'foo'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -125,6 +129,7 @@ KtCallExpression(110,116): 'bar(3)'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -138,6 +143,7 @@ KtNameReferenceExpression(110,113): 'bar'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -159,6 +165,7 @@ KtCallExpression(127,147): 'foo(4.bar(5).bar(6))'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -172,6 +179,7 @@ KtNameReferenceExpression(127,130): 'foo'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -179,6 +187,7 @@ KtCallExpression(133,139): 'bar(5)'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -192,6 +201,7 @@ KtNameReferenceExpression(133,136): 'bar'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -199,6 +209,7 @@ KtCallExpression(140,146): 'bar(6)'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -212,6 +223,7 @@ KtNameReferenceExpression(140,143): 'bar'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -219,6 +231,7 @@ KtCallExpression(148,154): 'bar(0)'
   KtInvokeFunctionReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)
 
@@ -232,5 +245,6 @@ KtNameReferenceExpression(148,151): 'bar'
   SyntheticPropertyAccessorReference:
     isImplicitReferenceToCompanion: false
     usesContextSensitiveResolution: false
+    attempt: null
     symbols:
       Nothing (Unresolved reference)

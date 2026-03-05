@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.test.frontend.fir
 
+import org.jetbrains.kotlin.cli.common.diagnosticsCollector
 import org.jetbrains.kotlin.cli.pipeline.Fir2IrPipelineArtifact
 import org.jetbrains.kotlin.cli.pipeline.FrontendPipelineArtifact
 import org.jetbrains.kotlin.cli.pipeline.PipelinePhase
@@ -41,13 +42,11 @@ abstract class Fir2IrCliFacade<Phase, InputPipelineArtifact, OutputPipelineArtif
         }
         @Suppress("UNCHECKED_CAST")
         val cliArtifact = inputArtifact.cliArtifact as InputPipelineArtifact
-
-        val messageCollector = cliArtifact.configuration.messageCollector
         val input = cliArtifact.withNewDiagnosticCollector(
             DiagnosticsCollectorImpl()
         )
         val output = phase.executePhase(input)
-            ?: return processErrorFromCliPhase(messageCollector, testServices)
+            ?: return processErrorFromCliPhase(cliArtifact.configuration, testServices)
         return Fir2IrCliBasedOutputArtifact(output)
     }
 }
@@ -62,5 +61,5 @@ class Fir2IrCliBasedOutputArtifact<A : Fir2IrPipelineArtifact>(val cliArtifact: 
     override val irMangler: KotlinMangler.IrMangler
         get() = cliArtifact.result.components.irMangler
     override val diagnosticReporter: BaseDiagnosticsCollector
-        get() = cliArtifact.diagnosticCollector
+        get() = cliArtifact.configuration.diagnosticsCollector
 }

@@ -3,6 +3,7 @@
 
 package org.jetbrains.kotlin.buildtools.api.arguments
 
+import java.nio.`file`.Path
 import kotlin.Array
 import kotlin.Boolean
 import kotlin.Deprecated
@@ -13,6 +14,7 @@ import org.jetbrains.kotlin.buildtools.api.DeprecatedCompilerArgument
 import org.jetbrains.kotlin.buildtools.api.KotlinReleaseVersion
 import org.jetbrains.kotlin.buildtools.api.RemovedCompilerArgument
 import org.jetbrains.kotlin.buildtools.api.arguments.enums.JvmTarget
+import org.jetbrains.kotlin.buildtools.api.arguments.types.ProfileCompilerCommand
 
 /**
  * @since 2.3.0
@@ -570,14 +572,16 @@ public interface JvmCompilerArguments : CommonCompilerArguments {
     /**
      * Debug option: Run the compiler with the async profiler and save snapshots to `outputDir`; `command` is passed to the async profiler on start.
      * `profilerPath` is the path to libasyncProfiler.so; async-profiler.jar should be on the compiler classpath.
-     * If it's not on the classpath, the compiler will attempt to load async-profiler.jar from the containing directory of profilerPath.
-     * Example: -Xprofile=<PATH_TO_ASYNC_PROFILER>/async-profiler/build/libasyncProfiler.so:event=cpu,interval=1ms,threads,start:<SNAPSHOT_DIR_PATH>
+     * If it's not on the classpath, the compiler will attempt to load async-profiler.jar from the containing directory of profilerPath. 
+     * Individual parameter values are separated by the system path separator.
+     * Example (Unix/Linux): -Xprofile=<PATH_TO_ASYNC_PROFILER>/async-profiler/build/libasyncProfiler.so:event=cpu,interval=1ms,threads,start:<SNAPSHOT_DIR_PATH>
+     * Example (Windows): -Xprofile=<PATH_TO_ASYNC_PROFILER>\async-profiler\build\libasyncProfiler.so;event=cpu,interval=1ms,threads,start;<SNAPSHOT_DIR_PATH>
      *
      * WARNING: this option is EXPERIMENTAL and it may be changed in the future without notice or may be removed entirely.
      */
     @JvmField
     @ExperimentalCompilerArgument
-    public val X_PROFILE: JvmCompilerArgument<String?> =
+    public val X_PROFILE: JvmCompilerArgument<ProfileCompilerCommand?> =
         JvmCompilerArgument("X_PROFILE", KotlinReleaseVersion(1, 4, 20))
 
     /**
@@ -619,9 +623,12 @@ public interface JvmCompilerArguments : CommonCompilerArguments {
      * Save the IR to metadata (Experimental).
      *
      * WARNING: this option is EXPERIMENTAL and it may be changed in the future without notice or may be removed entirely.
+     *
+     * Removed in Kotlin version 2.4.0.
      */
     @JvmField
     @ExperimentalCompilerArgument
+    @RemovedCompilerArgument
     public val X_SERIALIZE_IR: JvmCompilerArgument<String> =
         JvmCompilerArgument("X_SERIALIZE_IR", KotlinReleaseVersion(1, 6, 0))
 
@@ -799,7 +806,7 @@ public interface JvmCompilerArguments : CommonCompilerArguments {
      * Include a custom JDK from the specified location in the classpath instead of the default 'JAVA_HOME'.
      */
     @JvmField
-    public val JDK_HOME: JvmCompilerArgument<String?> =
+    public val JDK_HOME: JvmCompilerArgument<Path?> =
         JvmCompilerArgument("JDK_HOME", KotlinReleaseVersion(1, 0, 3))
 
     /**

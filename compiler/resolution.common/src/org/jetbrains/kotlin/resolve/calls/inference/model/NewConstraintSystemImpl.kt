@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.utils.SmartList
 import org.jetbrains.kotlin.utils.SmartSet
 import org.jetbrains.kotlin.utils.addToStdlib.trimToSize
 import kotlin.math.max
+import kotlin.reflect.KFunction
 
 class NewConstraintSystemImpl(
     private val constraintInjector: ConstraintInjector,
@@ -73,7 +74,8 @@ class NewConstraintSystemImpl(
         val previousAllowSemiFixationToOtherTypeVariables = this.allowSemiFixationToOtherTypeVariables
 
         require(typeVariablesThatAreCountedAsProperTypes == null) {
-            "Currently there should be no nested withDisallowingOnlyThisTypeVariablesForProperTypes calls"
+            val functionRef: KFunction<R> = ::withTypeVariablesThatAreCountedAsProperTypes
+            "Currently there should be no nested ${functionRef.name} calls"
         }
 
         typeVariablesThatAreCountedAsProperTypes = typeVariables
@@ -252,6 +254,7 @@ class NewConstraintSystemImpl(
         private val beforeTypeVariablesTransactionSize: Int,
         private val beforeConstraintCountByVariables: Map<TypeConstructorMarker, Int>,
         private val beforeConstraintsFromAllForks: Int,
+        private val beforeHasContradictionInForkPointsCache: Boolean?,
     ) : ConstraintSystemTransaction() {
         override fun closeTransaction() {
             checkState(State.TRANSACTION)
@@ -282,6 +285,9 @@ class NewConstraintSystemImpl(
             }
 
             addedInitialConstraints.clear() // remove constraint from storage.initialConstraints
+
+            hasContradictionInForkPointsCache = beforeHasContradictionInForkPointsCache
+
             closeTransaction(beforeState, beforeTypeVariablesTransactionSize)
         }
     }
@@ -296,6 +302,7 @@ class NewConstraintSystemImpl(
             beforeTypeVariablesTransactionSize = typeVariablesTransaction.size,
             beforeConstraintCountByVariables = storage.notFixedTypeVariables.mapValues { it.value.rawConstraintsCount },
             beforeConstraintsFromAllForks = storage.constraintsFromAllForkPoints.size,
+            beforeHasContradictionInForkPointsCache = hasContradictionInForkPointsCache,
         ).also {
             state = State.TRANSACTION
         }

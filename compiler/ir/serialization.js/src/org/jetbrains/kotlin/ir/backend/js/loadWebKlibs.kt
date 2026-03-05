@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.backend.common.reportLoadingProblemsIfAny
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.klibAbiCompatibilityLevel
 import org.jetbrains.kotlin.config.messageCollector
+import org.jetbrains.kotlin.config.skipLibrarySpecialCompatibilityChecks
 import org.jetbrains.kotlin.ir.backend.js.checkers.JsLibrarySpecialCompatibilityChecker
 import org.jetbrains.kotlin.ir.backend.js.checkers.WasmLibrarySpecialCompatibilityChecker
 import org.jetbrains.kotlin.js.config.friendLibraries
@@ -32,22 +33,14 @@ import org.jetbrains.kotlin.library.loader.KlibPlatformChecker
 fun loadWebKlibsInProductionPipeline(
     configuration: CompilerConfiguration,
     platformChecker: KlibPlatformChecker,
-): LoadedKlibs {
-    val klibs = loadWebKlibs(
-        configuration = configuration,
-        libraryPaths = configuration.libraries,
-        friendPaths = configuration.friendLibraries,
-        includedPath = configuration.includes,
-        platformChecker = platformChecker,
-        useStricterChecks = false // That's only necessary in tests. So, false.
-    )
-
-    val isWasm = platformChecker is KlibPlatformChecker.Wasm
-    val checker = if (isWasm) WasmLibrarySpecialCompatibilityChecker else JsLibrarySpecialCompatibilityChecker
-    checker.check(klibs.all, configuration.messageCollector, configuration.klibAbiCompatibilityLevel)
-
-    return klibs
-}
+): LoadedKlibs = loadWebKlibs(
+    configuration = configuration,
+    libraryPaths = configuration.libraries,
+    friendPaths = configuration.friendLibraries,
+    includedPath = configuration.includes,
+    platformChecker = platformChecker,
+    useStricterChecks = false // That's only necessary in tests. So, false.
+)
 
 /**
  * This is the entry point to load Kotlin/JS or Kotlin/Wasm KLIBs in the test pipeline.
@@ -97,5 +90,11 @@ private fun loadWebKlibs(
         all = result.librariesStdlibFirst,
         friends = result.loadFriendLibraries(friendPaths),
         included = result.loadFriendLibraries(listOfNotNull(includedPath)).firstOrNull()
-    )
+    ).also { klibs ->
+        if (!configuration.skipLibrarySpecialCompatibilityChecks) {
+            val isWasm = platformChecker is KlibPlatformChecker.Wasm
+            val checker = if (isWasm) WasmLibrarySpecialCompatibilityChecker else JsLibrarySpecialCompatibilityChecker
+            checker.check(klibs.all, configuration.messageCollector, configuration.klibAbiCompatibilityLevel)
+        }
+    }
 }

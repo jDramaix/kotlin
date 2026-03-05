@@ -1383,6 +1383,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
         }
 
         callableReferenceAccess.transformAnnotations(transformer, data)
+        callableReferenceAccess.transformErrorArgumentList(transformer, ContextIndependent)
         val explicitReceiver = callableReferenceAccess.explicitReceiver
         val transformedLHS = explicitReceiver
             ?.transformAsExplicitReceiver(ResolutionMode.ReceiverResolution.ForCallableReference, false)
@@ -1568,7 +1569,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
     }
 
     private fun evaluateAndReplaceArgumentMapping(annotationCall: FirAnnotationCall) {
-        val evaluationResult = FirExpressionEvaluator.evaluateAnnotationArguments(annotationCall, session)
+        val evaluationResult = FirExpressionEvaluator.evaluateAnnotationArguments(annotationCall, session, file)
         annotationCall.replaceArgumentMapping(
             buildAnnotationArgumentMapping {
                 source = annotationCall.argumentMapping.source
@@ -2024,6 +2025,11 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
             return (this as? ResolutionMode.WithExpectedType)?.arrayLiteralPosition != null
         }
 
+    private val ResolutionMode.forDependentCollectionLiteralResolution: Boolean
+        get() {
+            return this is ResolutionMode.ContextDependent || (this is ResolutionMode.WithExpectedType && !forceFullCompletion)
+        }
+
     private inline fun FirArgumentList.mapArguments(transform: (FirExpression) -> FirExpression): FirArgumentList =
         when (this) {
             is FirResolvedArgumentList -> buildResolvedArgumentList(
@@ -2045,7 +2051,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
                 else -> {
                     collectionLiteral.transformAnnotations(transformer, data)
                     collectionLiteral.transformChildren(transformer, ResolutionMode.ContextDependent)
-                    if (data !is ResolutionMode.ContextDependent) {
+                    if (!data.forDependentCollectionLiteralResolution) {
                         components.syntheticCallGenerator.resolveCollectionLiteralExpressionWithSyntheticOuterCall(
                             collectionLiteral, data as? ResolutionMode.WithExpectedType, resolutionContext
                         )

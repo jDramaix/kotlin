@@ -49,6 +49,7 @@ import org.jetbrains.kotlin.test.runners.DuplicateFileNameChecker
 import org.jetbrains.kotlin.test.services.LibraryProvider
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
+import org.jetbrains.kotlin.test.services.configuration.JvmForeignAnnotationsConfigurator
 import org.jetbrains.kotlin.test.services.configuration.ScriptingEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.fir.FirOldFrontendMetaConfigurator
 import org.jetbrains.kotlin.test.services.fir.FirSpecificParserSuppressor
@@ -134,6 +135,7 @@ fun TestConfigurationBuilder.baseFirDiagnosticTestConfiguration(
 
     useConfigurators(
         ::CommonEnvironmentConfigurator,
+        ::JvmForeignAnnotationsConfigurator,
         ::JvmEnvironmentConfigurator,
         ::ScriptingEnvironmentConfigurator,
     )

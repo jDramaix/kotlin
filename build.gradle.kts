@@ -122,12 +122,16 @@ rootProject.apply {
 IdeVersionConfigurator.setCurrentIde(project)
 
 if (!project.hasProperty("versions.kotlin-native")) {
-    extra["versions.kotlin-native"] = if (kotlinBuildProperties.isTeamcityBuild.get()) {
+    /**
+     * "versions.kotlin-native" is the version of K/N dist that will be baked into KGP and that KGP will try to resolve to run K/N
+     * compilations (including in KGP tests).
+     */
+    extra["versions.kotlin-native"] = if (kotlinBuildProperties.alignKotlinNativeVersionInTCBuilds) {
         kotlinVersion
     } else if (kotlinBuildProperties.isKotlinNativeEnabled.get()) {
         kotlinBuildProperties.defaultSnapshotVersion.get()
     } else {
-        "2.4.0-dev-1942"
+        "2.4.0-dev-3656"
     }
 }
 
@@ -242,6 +246,7 @@ val firCompilerCoreModules = arrayOf(
     ":compiler:fir:checkers:checkers.native",
     ":compiler:fir:checkers:checkers.wasm",
     ":compiler:fir:checkers:checkers.web.common",
+    ":compiler:fir:diagnostic-renderers",
     ":compiler:fir:entrypoint", // TODO should not be in core modules but FIR IDE uses DependencyListForCliModule from this module
     ":compiler:fir:fir2ir:jvm-backend",  // TODO should not be in core modules but FIR IDE uses Fir2IrSignatureComposer from this module
     ":compiler:fir:fir2ir" // TODO should not be in core modules but FIR IDE uses Fir2IrSignatureComposer from this module
@@ -879,7 +884,6 @@ tasks {
         dependsOn(":native:native.tests:driver:check")
         dependsOn(":native:native.tests:gc-fuzzing-tests:engine:check")
         dependsOn(":native:native.tests:stress:check")
-        dependsOn(":native:native.tests:klib-compatibility:check")
         dependsOn(":native:native.tests:litmus-tests:check")
     }
 
@@ -972,7 +976,7 @@ tasks {
         dependsOn("jvmCompilerIntegrationTest")
         dependsOn("compilerPluginTest")
         dependsOn(":kotlin-daemon-tests:test")
-        dependsOn(":compiler:arguments:test")
+        dependsOn(":compiler:arguments:check")
         dependsOn(":compiler:multiplatform-parsing:jvmTest")
         dependsOn(":compiler:fir:modularized-tests:test")
     }
@@ -1023,6 +1027,7 @@ tasks {
         dependsOn(":kotlin-tooling-metadata:check")
         dependsOn(":compiler:build-tools:kotlin-build-tools-api:check")
         dependsOn(":compiler:build-tools:kotlin-build-tools-api-tests:check")
+        dependsOn(":compiler:build-tools:kotlin-build-tools-api-forward-compatibility-tests:check")
         dependsOn(":tools:ide-plugin-dependencies-validator:test")
         dependsOn(":tools:stats-analyser:test")
         dependsOn(":libraries:tools:abi-validation:abi-tools:check")
@@ -1255,19 +1260,6 @@ configure<IdeaModel> {
     }
 }
 
-val disableVerificationTasks = providers.gradleProperty("kotlin.build.disable.verification.tasks")
-    .orNull?.toBoolean() ?: false
-if (disableVerificationTasks) {
-    logger.info("Verification tasks are disabled because `kotlin.build.disable.verification.tasks` is true")
-    gradle.taskGraph.whenReady {
-        allTasks.forEach {
-            if (it is VerificationTask) {
-                logger.info("Task ${it.path} is disabled because `kotlin.build.disable.verification.tasks` is true")
-                it.enabled = false
-            }
-        }
-    }
-}
 
 gradle.taskGraph.whenReady(checkYarnAndNPMSuppressed)
 

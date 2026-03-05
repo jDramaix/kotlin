@@ -168,7 +168,6 @@ class JvmIrCodegenFactory(
     ): BackendInput {
         val enableIdSignatures =
             configuration.getBoolean(JVMConfigurationKeys.LINK_VIA_SIGNATURES) ||
-                    configuration[JVMConfigurationKeys.SERIALIZE_IR, JvmSerializeIrMode.NONE] != JvmSerializeIrMode.NONE ||
                     configuration[JVMConfigurationKeys.KLIB_PATHS, emptyList()].isNotEmpty()
         val (mangler, symbolTable) =
             if (externalSymbolTable != null) externalMangler!! to externalSymbolTable
@@ -333,16 +332,11 @@ class JvmIrCodegenFactory(
     fun invokeLowerings(state: GenerationState, input: BackendInput): CodegenInput {
         val (irModuleFragment, irBuiltIns, symbolTable, irProviders, extensions, backendExtension, irPluginContext) =
             input
-        val irSerializer = if (
-            state.configuration.get(JVMConfigurationKeys.SERIALIZE_IR, JvmSerializeIrMode.NONE) != JvmSerializeIrMode.NONE
-        )
-            JvmIrSerializerImpl(state.configuration)
-        else null
 
         val evaluatorData = ideCodegenSettings.evaluatorData ?: computePsiBasedEvaluatorData(irModuleFragment)
         val context = JvmBackendContext(
             state, irBuiltIns, symbolTable, extensions,
-            backendExtension, irSerializer, JvmIrDeserializerImpl(), irProviders, irPluginContext, evaluatorData
+            backendExtension, irPluginContext, evaluatorData
         )
         val generationExtensions = state.configuration.filteredExtensions
             .mapNotNull { it.getPlatformIntrinsicExtension(context) as? JvmIrIntrinsicExtension }

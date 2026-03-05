@@ -597,6 +597,9 @@ fun extractArgumentsTypeRefAndSource(typeRef: FirTypeRef?): List<FirTypeRefSourc
         is FirFunctionTypeRef -> {
             val parameters = delegatedTypeRef.parameters
 
+            for (contextParameter in delegatedTypeRef.contextParameterTypeRefs) {
+                result.add(FirTypeRefSource(contextParameter, contextParameter.source))
+            }
             delegatedTypeRef.receiverTypeRef?.let { result.add(FirTypeRefSource(it, it.source)) }
             for (valueParameter in parameters) {
                 val valueParamTypeRef = valueParameter.returnTypeRef
@@ -946,10 +949,12 @@ fun FirResolvedQualifier.isStandalone(
     return true
 }
 
+/**
+ * @return `true` for qualifiers that are explicit parents (receivers) for other qualifiers, e.g., for `Outer` in `Outer.Nested`
+ */
 context(context: CheckerContext)
 fun FirResolvedQualifier.isExplicitParentOfResolvedQualifier(): Boolean {
-    val secondToLastElement = context.containingElements.elementAtOrNull(context.containingElements.size - 2)
-    return secondToLastElement.let { it is FirResolvedQualifier && it.explicitParent == this }
+    return context.secondToLastContainer.let { it is FirResolvedQualifier && it.explicitParent == this }
 }
 
 fun isExplicitTypeArgumentSource(source: KtSourceElement?): Boolean =

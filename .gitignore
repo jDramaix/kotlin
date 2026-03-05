@@ -49,6 +49,7 @@ build/
 .idea/protoeditor.xml
 .idea/uiDesigner.xml
 .idea/copilot.data.migration.*.xml
+.idea/junie.xml
 node_modules/
 .rpt2_cache/
 local.properties
@@ -65,6 +66,7 @@ kotlin-ide/
 **/.junie/memory/
 .claude/local.md
 .claude/CLAUDE.md
+.claude/settings.local.json
 libraries/stdlib/jklib-for-test/
 libraries/stdlib/jklib-for-test/*
 !libraries/stdlib/jklib-for-test/build.gradle.kts

@@ -129,24 +129,12 @@ fun main(args: Array<String>) {
                 model("codegen/boxInline")
             }
 
-            testClass<AbstractIrSerializeCompileKotlinAgainstInlineKotlinTest> {
-                model("codegen/boxInline")
-            }
-
             testClass<AbstractIrBytecodeListingTest> {
                 model("codegen/bytecodeListing")
             }
 
             testClass<AbstractIrAsmLikeInstructionListingTest> {
                 model("codegen/asmLike")
-            }
-
-            testClass<AbstractJvmIrInterpreterAfterFirPsi2IrTest> {
-                model("ir/interpreter", excludeDirs = listOf("helpers"))
-            }
-
-            testClass<AbstractJvmIrInterpreterAfterPsi2IrTest> {
-                model("ir/interpreter", excludeDirs = listOf("helpers"))
             }
 
             testClass<AbstractClassicJvmIntegrationDiagnosticTest> {
@@ -173,11 +161,6 @@ fun main(args: Array<String>) {
 
             testClass<AbstractFirBlackBoxInlineCodegenTestWithInlineScopes> {
                 model("codegen/boxInline", excludeDirs = k2BoxTestDir)
-            }
-
-            testClass<AbstractFirSerializeCompileKotlinAgainstInlineKotlinTestWithInlineScopes> {
-                model("codegen/box")
-                model("codegen/boxInline")
             }
 
             testClass<AbstractFirBlackBoxCodegenTestWithInlineScopes>("FirBlackBoxModernJdkCodegenTestGeneratedWithInlineScopes") {

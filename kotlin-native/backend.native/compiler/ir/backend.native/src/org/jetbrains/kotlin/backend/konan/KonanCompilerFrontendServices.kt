@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.konan.config.objcGenerics
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.deprecation.DeprecationResolver
 
-internal fun StorageComponentContainer.initContainer(config: KonanConfig) {
+internal fun StorageComponentContainer.initContainer(config: NativeSecondStageCompilationConfig) {
     useImpl<FrontendServices>()
 
     if (!config.configuration.emitLazyObjcHeaderFile.isNullOrEmpty()) {
@@ -47,7 +47,7 @@ internal fun StorageComponentContainer.initContainer(config: KonanConfig) {
                 get() = config.configuration.objcGenerics
 
             override val objcExportBlockExplicitParameterNames: Boolean
-                get() = config.configuration.get(BinaryOptions.objcExportBlockExplicitParameterNames, true)
+                get() = config.configuration.get(BinaryOptions.objcExportBlockExplicitParameterNames, false)
 
             override val disableSwiftMemberNameMangling: Boolean
                 get() = config.configuration.getBoolean(BinaryOptions.objcExportDisableSwiftMemberNameMangling)

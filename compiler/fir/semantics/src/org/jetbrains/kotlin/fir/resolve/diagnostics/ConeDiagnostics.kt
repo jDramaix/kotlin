@@ -275,6 +275,11 @@ sealed class ConeContractDescriptionError : ConeDiagnostic {
         override val reason: String
             get() = "instance check for erased type"
     }
+
+    class RequiresLanguageFeature(val featureName: String) : ConeContractDescriptionError() {
+        override val reason: String
+            get() = "requires language feature '$featureName' to be enabled"
+    }
 }
 
 class ConeIllegalAnnotationError(val name: Name) : ConeDiagnostic {
@@ -301,10 +306,6 @@ class ConeWrongNumberOfTypeArgumentsError(
     val isDeprecationErrorForCallableReferenceLHS: Boolean = false,
 ) : ConeDiagnosticWithSource(source), ConeUnmatchedTypeArgumentsError {
     override val reason: String get() = "Wrong number of type arguments"
-}
-
-class ConeTypeArgumentsNotAllowedOnPackageError(source: KtSourceElement) : ConeDiagnosticWithSource(source) {
-    override val reason: String get() = "Type arguments are not allowed for packages"
 }
 
 class ConeTypeArgumentsForOuterClass(source: KtSourceElement) : ConeDiagnosticWithSource(source) {

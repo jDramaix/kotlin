@@ -5,11 +5,7 @@
 
 package kotlin.reflect.jvm.internal
 
-import java.lang.reflect.Field
-import java.lang.reflect.Member
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.lang.reflect.Type
+import java.lang.reflect.*
 import kotlin.LazyThreadSafetyMode.PUBLICATION
 import kotlin.metadata.*
 import kotlin.metadata.jvm.*
@@ -21,7 +17,8 @@ internal abstract class KotlinKProperty<out V>(
     override val signature: String,
     override val rawBoundReceiver: Any?,
     val kmProperty: KmProperty,
-) : KotlinKCallable<V>(), ReflectKProperty<V> {
+    overriddenStorage: KCallableOverriddenStorage,
+) : KotlinKCallable<V>(overriddenStorage), ReflectKProperty<V> {
     override val name: String get() = kmProperty.name
 
     override val allParameters: List<KParameter> by lazy(PUBLICATION) {
@@ -83,7 +80,7 @@ internal abstract class KotlinKProperty<out V>(
 
     override val caller: Caller<*> get() = getter.caller
 
-    override val defaultCaller: Caller<*>? get() = getter.defaultCaller
+    override val callerWithDefaults: Caller<*>? get() = getter.callerWithDefaults
 
     override val annotations: List<Annotation>
         get() {
@@ -103,14 +100,14 @@ internal abstract class KotlinKProperty<out V>(
         }
 
     abstract class Accessor<out PropertyType, out ReturnType> :
-        KotlinKCallable<ReturnType>(), KProperty.Accessor<PropertyType>, KFunction<ReturnType> {
+        KotlinKCallable<ReturnType>(KCallableOverriddenStorage.EMPTY), KProperty.Accessor<PropertyType>, KFunction<ReturnType> {
         abstract override val property: KotlinKProperty<PropertyType>
 
         abstract val accessor: KmPropertyAccessorAttributes?
 
         override val container: KDeclarationContainerImpl get() = property.container
 
-        override val defaultCaller: Caller<*>? get() = null
+        override val callerWithDefaults: Caller<*>? get() = null
 
         override val rawBoundReceiver: Any? get() = property.rawBoundReceiver
 
@@ -123,6 +120,11 @@ internal abstract class KotlinKProperty<out V>(
         override val isOperator: Boolean get() = false
         override val isInfix: Boolean get() = false
         override val isSuspend: Boolean get() = false
+
+        final override fun replaceContainerForFakeOverride(
+            container: KDeclarationContainerImpl, overriddenStorage: KCallableOverriddenStorage,
+        ): ReflectKCallable<ReturnType> =
+            error("Property accessors can only be copied by copying the corresponding property")
 
         override val annotations: List<Annotation>
             get() =

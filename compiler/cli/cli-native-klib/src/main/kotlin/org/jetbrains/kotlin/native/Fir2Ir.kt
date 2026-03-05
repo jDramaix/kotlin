@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.native
 
 import org.jetbrains.kotlin.analyzer.CompilationErrorException
 import org.jetbrains.kotlin.backend.konan.driver.NativePhaseContext
-import org.jetbrains.kotlin.backend.konan.ir.BackendNativeSymbols
+import org.jetbrains.kotlin.backend.common.ir.PreSerializationNativeSymbols
 import org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr
 import org.jetbrains.kotlin.fir.backend.DelicateDeclarationStorageApi
 import org.jetbrains.kotlin.name.NativeForwardDeclarationKind
@@ -38,7 +38,7 @@ import org.jetbrains.kotlin.library.metadata.parseModuleHeader
 fun NativeFirstStagePhaseContext.fir2Ir(
         input: AllModulesFrontendOutput,
 ): Fir2IrOutput {
-    val resolvedLibraries = config.resolvedLibraries.getFullResolvedList()
+    val loadedKlibs = config.loadedKlibs
     val configuration = config.configuration
     val messageCollector = configuration.getNotNull(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY)
     val diagnosticsReporter = DiagnosticsCollectorImpl()
@@ -88,8 +88,8 @@ fun NativeFirstStagePhaseContext.fir2Ir(
     }.toList()
 
 
-    val usedLibraries = resolvedLibraries.filter { resolvedLibrary ->
-        val header = parseModuleHeader(resolvedLibrary.library.metadata.moduleHeaderData)
+    val usedLibraries = loadedKlibs.all.filter { library ->
+        val header = parseModuleHeader(library.metadata.moduleHeaderData)
 
         val nonEmptyPackageNames = buildSet {
             addAll(header.packageFragmentNameList)
@@ -99,13 +99,13 @@ fun NativeFirstStagePhaseContext.fir2Ir(
         usedPackages.any { it.asString() in nonEmptyPackageNames }
     }.toSet()
 
-    resolvedLibraries.find { it.library.isNativeStdlib }?.let {
+    loadedKlibs.all.find { it.isNativeStdlib }?.let {
         require(usedLibraries.contains(it)) {
             "Internal error: stdlib must be in usedLibraries, if it's in resolvedLibraries"
         }
     }
 
-    val symbols = createKonanSymbols(actualizedResult.irBuiltIns)
+    val symbols = PreSerializationNativeSymbols.Impl(actualizedResult.irBuiltIns)
 
     val renderDiagnosticNames = configuration.renderDiagnosticInternalName
     FirDiagnosticsCompilerResultsReporter.reportToMessageCollector(diagnosticsReporter, messageCollector, renderDiagnosticNames)
@@ -115,10 +115,4 @@ fun NativeFirstStagePhaseContext.fir2Ir(
     }
 
     return Fir2IrOutput(input, symbols, actualizedResult, usedLibraries)
-}
-
-private fun NativePhaseContext.createKonanSymbols(
-        irBuiltIns: IrBuiltIns,
-): BackendNativeSymbols {
-    return BackendNativeSymbols(this, irBuiltIns, this.config.configuration)
 }

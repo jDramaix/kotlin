@@ -25,7 +25,8 @@ internal abstract class KotlinKFunction(
     override val container: KDeclarationContainerImpl,
     override val signature: String,
     override val rawBoundReceiver: Any?,
-) : KotlinKCallable<Any?>(), ReflectKFunction, FunctionBase<Any?>, FunctionWithAllInvokes {
+    overriddenStorage: KCallableOverriddenStorage,
+) : KotlinKCallable<Any?>(overriddenStorage), ReflectKFunction, FunctionBase<Any?>, FunctionWithAllInvokes {
     protected abstract val contextParameters: List<KmValueParameter>
     protected abstract val extensionReceiverType: KmType?
     protected abstract val valueParameters: List<KmValueParameter>
@@ -77,7 +78,7 @@ internal abstract class KotlinKFunction(
         }.createValueClassAwareCallerIfNeeded(this, isDefault = false, forbidUnboxingForIndices = emptyList())
     }
 
-    override val defaultCaller: Caller<*>? by lazy(PUBLICATION) {
+    override val callerWithDefaults: Caller<*>? by lazy(PUBLICATION) {
         require(isConstructor || container is KPackageImpl) { "Only constructors and top-level functions are supported for now: $this" }
         val signature = jvmSignature
         val preventUnboxingForIndices = mutableListOf<Int>()

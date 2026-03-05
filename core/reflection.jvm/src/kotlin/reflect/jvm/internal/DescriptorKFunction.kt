@@ -102,7 +102,7 @@ internal class DescriptorKFunction private constructor(
         }.createValueClassAwareCallerIfNeeded(this, isDefault = false, forbidUnboxingForIndices = emptyList())
     }
 
-    override val defaultCaller: Caller<*>? by lazy(PUBLICATION) defaultCaller@{
+    override val callerWithDefaults: Caller<*>? by lazy(PUBLICATION) defaultCaller@{
         @Suppress("USELESS_CAST")
         val preventUnboxingForIndices = mutableListOf<Int>()
         val member: Member? = when (val jvmSignature = RuntimeTypeMapper.mapSignature(descriptor)) {
@@ -173,7 +173,9 @@ internal class DescriptorKFunction private constructor(
             DescriptorKFunction(containerClass.kotlin as KClassImpl<*>, it)
         }
 
-    override fun shallowCopy(overriddenStorage: KCallableOverriddenStorage): DescriptorKFunction =
+    override fun replaceContainerForFakeOverride(
+        container: KDeclarationContainerImpl, overriddenStorage: KCallableOverriddenStorage,
+    ): DescriptorKFunction =
         DescriptorKFunction(container, descriptor, overriddenStorage)
 
     private fun getFunctionWithDefaultParametersForValueClassOverride(function: ReflectKFunction): ReflectKFunction? {

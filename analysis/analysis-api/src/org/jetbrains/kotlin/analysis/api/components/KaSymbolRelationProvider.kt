@@ -47,13 +47,91 @@ public interface KaSymbolRelationProvider : KaSessionComponent {
     /**
      * The associated [KaSamConstructorSymbol] if this [KaClassLikeSymbol] is a
      * [functional interface type (SAM)](https://kotlinlang.org/docs/fun-interfaces.html).
+     *
+     * #### Example
+     *
+     * ```kotlin
+     * fun interface MyPredicate {
+     *     fun test(value: Int): Boolean
+     * }
+     *
+     * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+     * ```
+     *
+     * For `MyPredicate`, [samConstructor] returns the symbol for the synthetic SAM constructor
+     * that enables the `MyPredicate { ... }` lambda syntax.
      */
     public val KaClassLikeSymbol.samConstructor: KaSamConstructorSymbol?
 
     /**
-     * Returns the [KaClassLikeSymbol] of the corresponding SAM interface.
+     * Returns the single abstract function of a [functional interface](https://kotlinlang.org/docs/fun-interfaces.html),
+     * or `null` if this class is not a functional interface.
+     *
+     * A functional interface has exactly one abstract function. In Kotlin, it must be declared with the `fun` modifier.
+     * The function may be inherited from a parent interface.
+     *
+     * #### Example
+     *
+     * ```kotlin
+     * fun interface MyPredicate {
+     *     fun test(value: Int): Boolean
+     * }
+     * ```
+     *
+     * For `MyPredicate`, [functionalInterfaceFunction] returns the symbol for the `test` function.
+     *
+     * @see KaNamedClassSymbol.isFun
+     * @see samConstructor
      */
+    @KaExperimentalApi
+    @KaK1Unsupported
+    public val KaClassLikeSymbol.functionalInterfaceFunction: KaNamedFunctionSymbol?
+
+    /**
+     * Returns the [KaClassLikeSymbol] of the corresponding [functional (SAM) interface](https://kotlinlang.org/docs/fun-interfaces.html).
+     *
+     * #### Example
+     *
+     * ```kotlin
+     * fun interface MyPredicate {
+     *     fun test(value: Int): Boolean
+     * }
+     *
+     * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+     * ```
+     *
+     * For the `MyPredicate` SAM constructor symbol, [functionalInterface] returns the symbol for the `MyPredicate` interface.
+     */
+    public val KaSamConstructorSymbol.functionalInterface: KaClassLikeSymbol
+
+    /**
+     * Returns the [KaClassLikeSymbol] of the corresponding [functional (SAM) interface](https://kotlinlang.org/docs/fun-interfaces.html).
+     */
+    @Deprecated("Use 'functionalInterface' instead", ReplaceWith("functionalInterface"))
     public val KaSamConstructorSymbol.constructedClass: KaClassLikeSymbol
+        get() = functionalInterface
+
+    /**
+     * Returns the single abstract function of the [functional interface][functionalInterface] that this SAM constructor creates.
+     *
+     * #### Example
+     *
+     * ```kotlin
+     * fun interface MyPredicate {
+     *     fun test(value: Int): Boolean
+     * }
+     *
+     * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+     * ```
+     *
+     * For the `MyPredicate` SAM constructor symbol, [functionalInterfaceFunction] returns the symbol for the `test` function.
+     *
+     * @see KaClassLikeSymbol.functionalInterfaceFunction
+     * @see functionalInterface
+     */
+    @KaExperimentalApi
+    @KaK1Unsupported
+    public val KaSamConstructorSymbol.functionalInterfaceFunction: KaNamedFunctionSymbol
 
     /**
      * Returns the original [KaConstructorSymbol] for a [type-aliased constructor][KaSymbolOrigin.TYPEALIASED_CONSTRUCTOR], or `null`
@@ -70,6 +148,8 @@ public interface KaSymbolRelationProvider : KaSessionComponent {
      * The function doesn't return fake declarations, as it unwraps substituted overridden symbols implicitly
      * (see [INTERSECTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.INTERSECTION_OVERRIDE]
      * and [SUBSTITUTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.SUBSTITUTION_OVERRIDE]).
+     *
+     * Also, the function doesn't return the original overridden declaration of a delegated symbol (for that, use [fakeOverrideOriginal]).
      *
      * #### Example
      *
@@ -90,6 +170,7 @@ public interface KaSymbolRelationProvider : KaSessionComponent {
      * For `A.foo`, [allOverriddenSymbols] returns both overridden super-declarations, `B.foo` and `C.foo`.
      *
      * @see directlyOverriddenSymbols
+     * @see fakeOverrideOriginal
      */
     public val KaCallableSymbol.allOverriddenSymbols: Sequence<KaCallableSymbol>
 
@@ -99,6 +180,8 @@ public interface KaSymbolRelationProvider : KaSessionComponent {
      * The function doesn't return fake declarations, as it unwraps substituted overridden symbols implicitly
      * (see [INTERSECTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.INTERSECTION_OVERRIDE]
      * and [SUBSTITUTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.SUBSTITUTION_OVERRIDE]).
+     *
+     * Also, the function doesn't return the original overridden declaration of a delegated symbol (for that, use [fakeOverrideOriginal]).
      *
      * #### Example
      *
@@ -119,6 +202,7 @@ public interface KaSymbolRelationProvider : KaSessionComponent {
      * For `A.foo`, [directlyOverriddenSymbols] returns only the directly overridden super-declaration, `B.foo`.
      *
      * @see allOverriddenSymbols
+     * @see fakeOverrideOriginal
      */
     public val KaCallableSymbol.directlyOverriddenSymbols: Sequence<KaCallableSymbol>
 
@@ -294,6 +378,19 @@ public val KaSymbol.containingModule: KaModule
 /**
  * The associated [KaSamConstructorSymbol] if this [KaClassLikeSymbol] is a
  * [functional interface type (SAM)](https://kotlinlang.org/docs/fun-interfaces.html).
+ *
+ * #### Example
+ *
+ * ```kotlin
+ * fun interface MyPredicate {
+ *     fun test(value: Int): Boolean
+ * }
+ *
+ * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+ * ```
+ *
+ * For `MyPredicate`, [samConstructor] returns the symbol for the synthetic SAM constructor
+ * that enables the `MyPredicate { ... }` lambda syntax.
  */
 // Auto-generated bridge. DO NOT EDIT MANUALLY!
 @KaContextParameterApi
@@ -302,13 +399,90 @@ public val KaClassLikeSymbol.samConstructor: KaSamConstructorSymbol?
     get() = with(session) { samConstructor }
 
 /**
- * Returns the [KaClassLikeSymbol] of the corresponding SAM interface.
+ * Returns the single abstract function of a [functional interface](https://kotlinlang.org/docs/fun-interfaces.html),
+ * or `null` if this class is not a functional interface.
+ *
+ * A functional interface has exactly one abstract function. In Kotlin, it must be declared with the `fun` modifier.
+ * The function may be inherited from a parent interface.
+ *
+ * #### Example
+ *
+ * ```kotlin
+ * fun interface MyPredicate {
+ *     fun test(value: Int): Boolean
+ * }
+ * ```
+ *
+ * For `MyPredicate`, [functionalInterfaceFunction] returns the symbol for the `test` function.
+ *
+ * @see KaNamedClassSymbol.isFun
+ * @see samConstructor
+ */
+// Auto-generated bridge. DO NOT EDIT MANUALLY!
+@KaExperimentalApi
+@KaK1Unsupported
+@KaContextParameterApi
+context(session: KaSession)
+public val KaClassLikeSymbol.functionalInterfaceFunction: KaNamedFunctionSymbol?
+    get() = with(session) { functionalInterfaceFunction }
+
+/**
+ * Returns the [KaClassLikeSymbol] of the corresponding [functional (SAM) interface](https://kotlinlang.org/docs/fun-interfaces.html).
+ *
+ * #### Example
+ *
+ * ```kotlin
+ * fun interface MyPredicate {
+ *     fun test(value: Int): Boolean
+ * }
+ *
+ * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+ * ```
+ *
+ * For the `MyPredicate` SAM constructor symbol, [functionalInterface] returns the symbol for the `MyPredicate` interface.
  */
 // Auto-generated bridge. DO NOT EDIT MANUALLY!
 @KaContextParameterApi
 context(session: KaSession)
+public val KaSamConstructorSymbol.functionalInterface: KaClassLikeSymbol
+    get() = with(session) { functionalInterface }
+
+/**
+ * Returns the [KaClassLikeSymbol] of the corresponding [functional (SAM) interface](https://kotlinlang.org/docs/fun-interfaces.html).
+ */
+// Auto-generated bridge. DO NOT EDIT MANUALLY!
+@Deprecated("Use 'functionalInterface' instead", ReplaceWith("functionalInterface"))
+@KaContextParameterApi
+context(session: KaSession)
 public val KaSamConstructorSymbol.constructedClass: KaClassLikeSymbol
+    @Suppress("DEPRECATION")
     get() = with(session) { constructedClass }
+
+/**
+ * Returns the single abstract function of the [functional interface][functionalInterface] that this SAM constructor creates.
+ *
+ * #### Example
+ *
+ * ```kotlin
+ * fun interface MyPredicate {
+ *     fun test(value: Int): Boolean
+ * }
+ *
+ * val p = MyPredicate { it > 0 }  // MyPredicate is a SAM constructor call
+ * ```
+ *
+ * For the `MyPredicate` SAM constructor symbol, [functionalInterfaceFunction] returns the symbol for the `test` function.
+ *
+ * @see KaClassLikeSymbol.functionalInterfaceFunction
+ * @see functionalInterface
+ */
+// Auto-generated bridge. DO NOT EDIT MANUALLY!
+@KaExperimentalApi
+@KaK1Unsupported
+@KaContextParameterApi
+context(session: KaSession)
+public val KaSamConstructorSymbol.functionalInterfaceFunction: KaNamedFunctionSymbol
+    get() = with(session) { functionalInterfaceFunction }
 
 /**
  * Returns the original [KaConstructorSymbol] for a [type-aliased constructor][KaSymbolOrigin.TYPEALIASED_CONSTRUCTOR], or `null`
@@ -330,6 +504,8 @@ public val KaConstructorSymbol.originalConstructorIfTypeAliased: KaConstructorSy
  * (see [INTERSECTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.INTERSECTION_OVERRIDE]
  * and [SUBSTITUTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.SUBSTITUTION_OVERRIDE]).
  *
+ * Also, the function doesn't return the original overridden declaration of a delegated symbol (for that, use [fakeOverrideOriginal]).
+ *
  * #### Example
  *
  * ```kotlin
@@ -349,6 +525,7 @@ public val KaConstructorSymbol.originalConstructorIfTypeAliased: KaConstructorSy
  * For `A.foo`, [allOverriddenSymbols] returns both overridden super-declarations, `B.foo` and `C.foo`.
  *
  * @see directlyOverriddenSymbols
+ * @see fakeOverrideOriginal
  */
 // Auto-generated bridge. DO NOT EDIT MANUALLY!
 @KaContextParameterApi
@@ -362,6 +539,8 @@ public val KaCallableSymbol.allOverriddenSymbols: Sequence<KaCallableSymbol>
  * The function doesn't return fake declarations, as it unwraps substituted overridden symbols implicitly
  * (see [INTERSECTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.INTERSECTION_OVERRIDE]
  * and [SUBSTITUTION_OVERRIDE][org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin.SUBSTITUTION_OVERRIDE]).
+ *
+ * Also, the function doesn't return the original overridden declaration of a delegated symbol (for that, use [fakeOverrideOriginal]).
  *
  * #### Example
  *
@@ -382,6 +561,7 @@ public val KaCallableSymbol.allOverriddenSymbols: Sequence<KaCallableSymbol>
  * For `A.foo`, [directlyOverriddenSymbols] returns only the directly overridden super-declaration, `B.foo`.
  *
  * @see allOverriddenSymbols
+ * @see fakeOverrideOriginal
  */
 // Auto-generated bridge. DO NOT EDIT MANUALLY!
 @KaContextParameterApi
