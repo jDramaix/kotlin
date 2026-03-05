@@ -1,11 +1,7 @@
 import org.gradle.api.Project
 import java.io.File
 
-try {
-    project.removePrePushHookIfExists()
-} catch (e: Throwable) {
-    logger.warn("Could not remove pre-push hook: $e")
-}
+project.removePrePushHookIfExists()
 
 fun Project.removePrePushHookIfExists() {
     val prePushHookPath = rootProject.getGitDirectory().toPath()
