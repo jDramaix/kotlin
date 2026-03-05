@@ -288,7 +288,6 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
 
         val jarDepsModuleDescriptor = createJarDependenciesModuleDescriptor(projectEnvironment, projectContext)
         val descriptors = sortedDependencies.map { getModuleDescriptor(it) } + jarDepsModuleDescriptor
-        //descriptors.forEach { it.setDependencies(descriptors) }
         descriptors.forEach { if (it != jarDepsModuleDescriptor) it.setDependencies(descriptors) }
 
         val mainModuleLib = sortedDependencies.find { it.libraryFile == klib }
