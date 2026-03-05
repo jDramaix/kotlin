@@ -215,6 +215,24 @@ class MuteListSkipper(testServices: org.jetbrains.kotlin.test.services.TestServi
             "testValues", // EnumEntries<T> simplified to raw EnumEntries.
             "testWhenSmartCastToEnum", // EnumEntries<T> simplified to raw EnumEntries.
             // End of IR mismatches
+
+            // IR mismatch pending multi module setup
+            "testActualizeInterfaceAsAny",
+            "testExpectClassInherited",
+            "testExpectIntersectionOverride",
+            "testExpectMemberInNotExpectClass",
+            "testExpectedEnumClass",
+            "testExpectedFun",
+            "testExpectedSealedClass",
+            "testFirBuilder",
+            "testGenericClassInDifferentModule",
+            "testInternalOverrideCrossModule",
+            "testInternalOverrideWithFriendModule",
+            "testInternalPotentialFakeOverride",
+            "testInternalPotentialOverride",
+            "testInternalWithPublishedApiOverride",
+            "testIntersectionWithPublishedApiOverride",
+            // end of pending multi module setup
         )
     }
 
