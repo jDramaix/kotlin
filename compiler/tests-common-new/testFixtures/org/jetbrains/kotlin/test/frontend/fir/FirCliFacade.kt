@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.cli.pipeline.FrontendFilesForPluginsGenerationPipeli
 import org.jetbrains.kotlin.cli.pipeline.FrontendPipelineArtifact
 import org.jetbrains.kotlin.cli.pipeline.PipelinePhase
 import org.jetbrains.kotlin.config.messageCollector
-import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
 import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.moduleData
 import org.jetbrains.kotlin.fir.pipeline.SingleModuleFrontendOutput
@@ -22,7 +21,6 @@ import org.jetbrains.kotlin.test.model.FrontendFacade
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.*
-import org.jetbrains.kotlin.cli.common.messages.MessageCollectorImpl
 
 abstract class FirCliFacade<Phase, OutputPipelineArtifact>(
     testServices: TestServices,
@@ -42,7 +40,6 @@ abstract class FirCliFacade<Phase, OutputPipelineArtifact>(
         val configuration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
         val input = ConfigurationPipelineArtifact(
             configuration = configuration,
-            diagnosticCollector = DiagnosticsCollectorImpl(),
             rootDisposable = testServices.compilerConfigurationProvider.testRootDisposable,
         )
 
@@ -61,7 +58,7 @@ abstract class FirCliFacade<Phase, OutputPipelineArtifact>(
         firOutputs: List<SingleModuleFrontendOutput>,
     ): List<FirOutputPartForDependsOnModule> {
         val modulesFromTheSameStructure = module.transitiveDependsOnDependencies(includeSelf = true, reverseOrder = true)
-            .associateBy { "<${it.name}>"}
+            .associateBy { "<${it.name}>" }
         return firOutputs.map {
             val correspondingModule = modulesFromTheSameStructure.getValue(it.session.moduleData.name.asString())
             it.toTestOutputPart(correspondingModule, testServices)
@@ -98,20 +95,12 @@ fun SingleModuleFrontendOutput.toTestOutputPart(
     )
 }
 
-
-
 fun processErrorFromCliPhase(messageCollector: MessageCollector, testServices: TestServices): Nothing? {
     if (messageCollector.hasErrors()) {
         if (CHECK_COMPILER_OUTPUT in testServices.moduleStructure.allDirectives) {
             // errors from message collector would be checked separately
             return null
         }
-        val errors = when (messageCollector) {
-            is MessageCollectorImpl -> messageCollector.errors.joinToString("\n") { it.toString() }
-            is org.jetbrains.kotlin.test.utils.MessageCollectorForCompilerTests -> messageCollector.errors.joinToString("\n")
-            else -> "Unknown errors (collector is ${messageCollector::class.simpleName})"
-        }
-        error("CLI phase failed with errors:\n$errors")
     }
     error("CLI phase returned null and there are no errors in the message collector ")
 }
