@@ -67,7 +67,6 @@ kotlin-ide/
 .claude/local.md
 .claude/CLAUDE.md
 .claude/settings.local.json
-libraries/stdlib/jklib-for-test/
 libraries/stdlib/jklib-for-test/*
 !libraries/stdlib/jklib-for-test/build.gradle.kts
 !libraries/stdlib/jklib-for-test/src/
