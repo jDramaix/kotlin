@@ -58,7 +58,9 @@ class KlibMetadataModuleDescriptorFactoryImpl(
             storageManager = storageManager,
             moduleDescriptor = moduleDescriptor,
             configuration = KlibCompilerDeserializationConfiguration(languageVersionSettings),
-            compositePackageFragmentAddend = functionInterfacePackageFragmentProvider(storageManager, moduleDescriptor),
+            compositePackageFragmentAddend = runIf(library.isAnyPlatformStdlib) {
+                functionInterfacePackageFragmentProvider(storageManager, moduleDescriptor)
+            },
             lookupTracker = lookupTracker
         )
 

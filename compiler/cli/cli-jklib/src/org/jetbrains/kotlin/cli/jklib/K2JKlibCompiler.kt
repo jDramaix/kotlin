@@ -592,7 +592,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
                 manifest {
                     moduleName(configuration[MODULE_NAME]!!)
                     versions(versions)
-                    platformAndTargets(BuiltInsPlatform.COMMON, emptyList())
+                    platformAndTargets(BuiltInsPlatform.JKLIB, emptyList())
                 }
                 includeMetadata(serializerOutput.serializedMetadata ?: error("expected serialized metadata"))
                 includeIr(serializerOutput.serializedIr)
