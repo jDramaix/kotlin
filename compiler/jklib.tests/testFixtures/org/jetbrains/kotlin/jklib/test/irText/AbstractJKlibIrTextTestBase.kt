@@ -63,7 +63,7 @@ abstract class AbstractJKlibIrTextTestBase<FrontendOutput : ResultingArtifact.Fr
             ::CoroutineHelpersSourceFilesProvider,
         )
 
-        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper /*, ::MuteListSkipper */)
+        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper , ::MuteListSkipper)
 
         facadeStep(frontendFacade)
         firHandlersStep {
