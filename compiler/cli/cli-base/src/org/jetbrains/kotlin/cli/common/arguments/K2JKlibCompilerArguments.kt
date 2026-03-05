@@ -244,6 +244,22 @@ Modes:
             field = if (value.isNullOrEmpty()) null else value
         }
 
+    @Argument(
+        value = "-Xsam-conversions",
+        valueDescription = "{class|indy}",
+        description =
+        """Select the code generation scheme for SAM conversions.
+-Xsam-conversions=indy          Generate SAM conversions using 'invokedynamic' with 'LambdaMetafactory.metafactory'.
+-Xsam-conversions=class         Generate SAM conversions as explicit classes.
+The default value is 'indy'.""",
+    )
+    var samConversions: String? = null
+        set(value) {
+        checkFrozen()
+        field = if (value.isNullOrEmpty()) null else value
+    }
+
+
     override fun copyOf(): Freezable = TODO() // copyK2JKlibCompilerArguments(this, K2JKlibCompilerArguments())
 
     @get:Transient

@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.cli.jvm.configureJdkHomeFromSystemProperty
 import org.jetbrains.kotlin.codegen.CompilationException
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.config.CommonConfigurationKeys.MODULE_NAME
+import org.jetbrains.kotlin.config.JvmClosureGenerationScheme
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.context.ContextForNewModule
 import org.jetbrains.kotlin.context.ProjectContext
@@ -453,6 +454,19 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
             }
             for (path in arguments.classpath?.split(java.io.File.pathSeparatorChar).orEmpty()) {
                 add(CLIConfigurationKeys.CONTENT_ROOTS, JvmClasspathRoot(java.io.File(path)))
+            }
+
+            arguments.samConversions?.let {
+                val parsedValue = JvmClosureGenerationScheme.fromString(it)
+                if (parsedValue != null) {
+                put(JVMConfigurationKeys.SAM_CONVERSIONS, parsedValue)
+                } else {
+                messageCollector.report(
+                    ERROR,
+                    "Unknown `-Xsam-conversions` argument: ${it}\n." +
+                    "Supported arguments: ${JvmClosureGenerationScheme.entries.joinToString { it.description }}",
+                )
+                }
             }
         }
 
