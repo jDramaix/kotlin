@@ -1,3 +1,6 @@
+// Stubbed to provide dummy positive literal configurations to bypass a systemic IrFileSerializer crash with negative constants.
+// Also uses Hybrid Inheritance to isolate collections while retaining Comparable to avoid IrFunctionFakeOverrideSymbol crashes.
+// jvm-minimal-for-test includes the real source.
 @file:Suppress("NOTHING_TO_INLINE")
 package kotlin
 

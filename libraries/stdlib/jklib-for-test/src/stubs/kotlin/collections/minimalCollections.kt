@@ -1,3 +1,6 @@
+// Stubbed to provide minimal dummy implementations for collection functions (like listOf() and joinToString()) 
+// required by primitive tests. The real collections are excluded entirely to isolate the primitive world 
+// and bypass IrFunctionFakeOverrideSymbol crashes.
 package kotlin.collections
 
 public interface Iterable<out T> {

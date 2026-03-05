@@ -3,6 +3,10 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
+// Stubbed using a delegation-based approach (wrapping an Array) to bypass dependencies on internal JVM 
+// serialization classes (like throwReadObjectNotSupported) and AbstractList, which would otherwise trigger 
+// large transitive dependency chains and IrFunctionFakeOverrideSymbol crashes.
+// jvm-minimal-for-test omits this entirely.
 package kotlin.enums
 
 @SinceKotlin("1.9")

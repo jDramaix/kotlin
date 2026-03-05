@@ -1,3 +1,7 @@
+// Stubbed to provide dummy positive literals (e.g. MIN_VALUE = 1L) because the compiler parser treats negative literals as 
+// IrCall instead of IrConst, causing IrFileSerializer crashes during minimal bootstrapping.
+// Omits inc() and dec() operators to avoid bootstrap circularities.
+// jvm-minimal-for-test includes the real source.
 @file:Suppress("NOTHING_TO_INLINE")
 package kotlin
 

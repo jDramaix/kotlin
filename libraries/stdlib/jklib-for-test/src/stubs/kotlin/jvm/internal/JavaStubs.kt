@@ -1,3 +1,6 @@
+// Stubbed to provide essential reflection and CallableReference runtime bridges required by the compiler backend, 
+// avoiding the need to include the full kotlin.reflect layer. 
+// jvm-minimal-for-test handles this implicitly through its broader classpath.
 package kotlin.jvm.internal
 
 import kotlin.reflect.KClass
