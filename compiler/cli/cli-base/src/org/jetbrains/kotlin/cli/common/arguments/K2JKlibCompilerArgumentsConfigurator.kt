@@ -20,6 +20,7 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
         result[JvmAnalysisFlags.javaTypeEnhancementState] = JavaTypeEnhancementStateParser(collector, languageVersion.toKotlinVersion())
             .parse(jsr305, supportCompatqualCheckerFrameworkAnnotations, jspecifyAnnotations, nullabilityAnnotations)
 
+        configureJvmDefaultMode(collector)?.let { result[JvmAnalysisFlags.jvmDefaultMode] = it }
         result[JvmAnalysisFlags.inheritMultifileParts] = inheritMultifileParts
         result[JvmAnalysisFlags.outputBuiltinsMetadata] = outputBuiltinsMetadata
         return result
@@ -40,6 +41,28 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
         if (valueClasses) {
             result[LanguageFeature.ValueClasses] = LanguageFeature.State.ENABLED
         }
+        if (configureJvmDefaultMode(null)?.isEnabled == true) {
+            result[LanguageFeature.ForbidSuperDelegationToAbstractFakeOverride] =
+                LanguageFeature.State.ENABLED
+        }
         return result
+    }
+
+    private fun K2JKlibCompilerArguments.configureJvmDefaultMode(
+        collector: MessageCollector?
+    ): JvmDefaultMode? =
+        when {
+        jvmDefault != null ->
+            JvmDefaultMode.fromStringOrNull(jvmDefault).also {
+            if (it == null) {
+                collector?.report(
+                CompilerMessageSeverity.ERROR,
+                "Unknown -jvm-default mode: $jvmDefault, supported modes: " +
+                    "${JvmDefaultMode.entries.map(JvmDefaultMode::description)}",
+                )
+            }
+            }
+
+        else -> null
     }
 }

@@ -123,33 +123,19 @@ See KT-45671 for more details."""
         }
 
     @Argument(
-        value = "-Xjvm-default",
-        valueDescription = "{all|all-compatibility|disable}",
-        description = """Emit JVM default methods for interface declarations with bodies. The default is 'disable'.
--Xjvm-default=all                Generate JVM default methods for all interface declarations with bodies in the module.
-                                 Do not generate 'DefaultImpls' stubs for interface declarations with bodies. If an interface inherits a method with a
-                                 body from an interface compiled in 'disable' mode and doesn't override it, then a 'DefaultImpls' stub will be
-                                 generated for it.
-                                 This BREAKS BINARY COMPATIBILITY if some client code relies on the presence of 'DefaultImpls' classes.
-                                 Note that if interface delegation is used, all interface methods are delegated.
--Xjvm-default=all-compatibility  Like 'all', but additionally generate compatibility stubs in the 'DefaultImpls' classes.
-                                 Compatibility stubs can help library and runtime authors maintain backward binary compatibility
-                                 for existing clients compiled against previous library versions.
-                                 'all' and 'all-compatibility' modes change the library ABI surface that will be used by clients after
-                                 the recompilation of the library. Because of this, clients might be incompatible with previous library
-                                 versions. This usually means that proper library versioning is required, for example with major version increases in SemVer.
-                                 In subtypes of Kotlin interfaces compiled in 'all' or 'all-compatibility' mode, 'DefaultImpls'
-                                 compatibility stubs will invoke the default method of the interface with standard JVM runtime resolution semantics.
-                                 Perform additional compatibility checks for classes inheriting generic interfaces where in some cases an
-                                 additional implicit method with specialized signatures was generated in 'disable' mode.
-                                 Unlike in 'disable' mode, the compiler will report an error if such a method is not overridden explicitly
-                                 and the class is not annotated with '@JvmDefaultWithoutCompatibility' (see KT-39603 for more details).
--Xjvm-default=disable            Default behavior. Do not generate JVM default methods."""
+        value = "-jvm-default",
+        valueDescription = "{enable|no-compatibility|disable}",
+        description = """Emit JVM default methods for interface declarations with bodies. The default is 'enable'.
+-jvm-default=enable              Generate default methods for non-abstract interface declarations, as well as 'DefaultImpls' classes with
+                                 static methods for compatibility with code compiled in the 'disable' mode.
+                                 This is the default behavior since language version 2.2.
+-jvm-default=no-compatibility    Generate default methods for non-abstract interface declarations. Do not generate 'DefaultImpls' classes.
+-jvm-default=disable             Do not generate JVM default methods. This is the default behavior up to language version 2.1.""",
     )
-    var jvmDefault: String = JvmDefaultMode.DISABLE.description
+    var jvmDefault: String? = null
         set(value) {
             checkFrozen()
-            field = value
+            field = if (value.isNullOrEmpty()) null else value
         }
 
     @Argument(
