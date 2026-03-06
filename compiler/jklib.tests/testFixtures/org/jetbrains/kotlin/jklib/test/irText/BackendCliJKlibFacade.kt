@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.cli.common.diagnosticsCollector
 
 class BackendCliJKlibFacade(testServices: TestServices) : BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
     override fun transform(module: org.jetbrains.kotlin.test.model.TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
@@ -34,16 +35,15 @@ class BackendCliJKlibFacade(testServices: TestServices) : BackendFacade<IrBacken
 
         val phaseConfig = PhaseConfig()
         val context = PipelineContext(
-             testServices.compilerConfigurationProvider.getCompilerConfiguration(module).getNotNull(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY),
-             cliArtifact.diagnosticCollector,
              object : PerformanceManager(JvmPlatforms.defaultJvmPlatform, "Test") {},
-             renderDiagnosticInternalName = false,
              kaptMode = false
         )
 
         JKlibKlibSerializationPhase.invokeToplevel(phaseConfig, context, cliArtifact)
 
+        val diagnosticsReporter = cliArtifact.configuration.diagnosticsCollector
+
         // Assuming output is "result.klib" as per default in JKlibKlibSerializationPhase
-        return BinaryArtifacts.KLib(File("result.klib"), cliArtifact.diagnosticCollector)
+        return BinaryArtifacts.KLib(File("result.klib"), diagnosticsReporter)
     }
 }

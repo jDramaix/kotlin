@@ -16,11 +16,13 @@ import org.jetbrains.kotlin.fir.deserialization.SingleModuleDataProvider
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.java.FirJvmTargetProvider
 import org.jetbrains.kotlin.fir.java.JavaSymbolProvider
+import org.jetbrains.kotlin.fir.java.deserialization.FirJvmBuiltinsSymbolProvider
 import org.jetbrains.kotlin.fir.java.deserialization.FirJvmClasspathBuiltinSymbolProvider
 import org.jetbrains.kotlin.fir.java.deserialization.JvmClassFileBasedSymbolProvider
 import org.jetbrains.kotlin.fir.java.deserialization.OptionalAnnotationClassesProvider
 import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.providers.impl.FirCloneableSymbolProvider
+import org.jetbrains.kotlin.fir.resolve.providers.impl.FirFallbackBuiltinSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.scopes.wrapScopeWithJvmMapped
 import org.jetbrains.kotlin.fir.scopes.FirKotlinScopeProvider
 import org.jetbrains.kotlin.fir.session.*
@@ -30,7 +32,7 @@ import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.metadata.resolver.KotlinResolvedLibrary
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.platform.konan.NativePlatforms
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.utils.addToStdlib.runIf
 import org.jetbrains.kotlin.utils.addToStdlib.shouldNotBeCalled
 
@@ -42,6 +44,7 @@ object FirJKlibSessionFactory : FirAbstractSessionFactory<FirJKlibSessionFactory
         scopeProvider: FirKotlinScopeProvider,
         context: Context,
     ): List<FirSymbolProvider> {
+        val kotlinClassFinder = context.projectEnvironment.getKotlinClassFinder(context.projectEnvironment.getSearchScopeForProjectLibraries())
         return listOf(
             FirCloneableSymbolProvider(session, moduleData, scopeProvider),
             OptionalAnnotationClassesProvider(
@@ -50,6 +53,9 @@ object FirJKlibSessionFactory : FirAbstractSessionFactory<FirJKlibSessionFactory
                 scopeProvider,
                 context.packagePartProvider
             ),
+            FirJvmBuiltinsSymbolProvider(session, FirFallbackBuiltinSymbolProvider(session, moduleData, scopeProvider)) {
+                kotlinClassFinder.findBuiltInsData(it)
+            }
         )
     }
 
@@ -270,7 +276,7 @@ internal fun <F> prepareJKlibSessions(
         files,
         configuration,
         rootModuleName,
-        NativePlatforms.unspecifiedNativePlatform,
+        JvmPlatforms.unspecifiedJvmPlatform,
         metadataCompilationMode,
         libraryList,
         extensionRegistrars,

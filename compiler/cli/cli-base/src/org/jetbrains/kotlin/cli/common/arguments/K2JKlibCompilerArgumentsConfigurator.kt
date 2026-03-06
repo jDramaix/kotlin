@@ -5,22 +5,20 @@
 
 package org.jetbrains.kotlin.cli.common.arguments
 
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.config.*
 
 class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator() {
     override fun configureAnalysisFlags(
         arguments: CommonCompilerArguments,
-        collector: MessageCollector,
+        reporter: Reporter,
         languageVersion: LanguageVersion,
     ): MutableMap<AnalysisFlag<*>, Any> = with(arguments) {
         require(this is K2JKlibCompilerArguments)
-        val result = super.configureAnalysisFlags(arguments, collector, languageVersion)
-        result[JvmAnalysisFlags.javaTypeEnhancementState] = JavaTypeEnhancementStateParser(collector, languageVersion.toKotlinVersion())
+        val result = super.configureAnalysisFlags(arguments, reporter, languageVersion)
+        result[JvmAnalysisFlags.javaTypeEnhancementState] = JavaTypeEnhancementStateParser(reporter, languageVersion.toKotlinVersion())
             .parse(jsr305, supportCompatqualCheckerFrameworkAnnotations, jspecifyAnnotations, nullabilityAnnotations)
 
-        configureJvmDefaultMode(collector)?.let { result[JvmAnalysisFlags.jvmDefaultMode] = it }
+        configureJvmDefaultMode(reporter)?.let { result[JvmAnalysisFlags.jvmDefaultMode] = it }
         result[JvmAnalysisFlags.inheritMultifileParts] = inheritMultifileParts
         result[JvmAnalysisFlags.outputBuiltinsMetadata] = outputBuiltinsMetadata
         return result
@@ -28,10 +26,10 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
 
     override fun configureLanguageFeatures(
         arguments: CommonCompilerArguments,
-        collector: MessageCollector,
+        reporter: Reporter,
     ): MutableMap<LanguageFeature, LanguageFeature.State> = with(arguments) {
         require(this is K2JKlibCompilerArguments)
-        val result = super.configureLanguageFeatures(arguments, collector)
+        val result = super.configureLanguageFeatures(arguments, reporter)
         if (typeEnhancementImprovementsInStrictMode) {
             result[LanguageFeature.TypeEnhancementImprovementsInStrictMode] = LanguageFeature.State.ENABLED
         }
@@ -39,7 +37,7 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
             result[LanguageFeature.ProhibitUsingNullableTypeParameterAgainstNotNullAnnotated] = LanguageFeature.State.ENABLED
         }
         if (valueClasses) {
-            result[LanguageFeature.ValueClasses] = LanguageFeature.State.ENABLED
+            result[LanguageFeature.JvmInlineMultiFieldValueClasses] = LanguageFeature.State.ENABLED
         }
         if (configureJvmDefaultMode(null)?.isEnabled == true) {
             result[LanguageFeature.ForbidSuperDelegationToAbstractFakeOverride] =
@@ -49,14 +47,13 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
     }
 
     private fun K2JKlibCompilerArguments.configureJvmDefaultMode(
-        collector: MessageCollector?
+        reporter: Reporter?
     ): JvmDefaultMode? =
         when {
         jvmDefault != null ->
             JvmDefaultMode.fromStringOrNull(jvmDefault).also {
             if (it == null) {
-                collector?.report(
-                CompilerMessageSeverity.ERROR,
+                reporter?.reportError(
                 "Unknown -jvm-default mode: $jvmDefault, supported modes: " +
                     "${JvmDefaultMode.entries.map(JvmDefaultMode::description)}",
                 )

@@ -60,5 +60,7 @@ interface KotlinLibraryResolveResult {
 
     fun getFullList(): List<KotlinLibrary>
 
+    fun getFullResolvedList(): List<KotlinResolvedLibrary>
+
     fun forEach(action: (KotlinLibrary) -> Unit)
 }

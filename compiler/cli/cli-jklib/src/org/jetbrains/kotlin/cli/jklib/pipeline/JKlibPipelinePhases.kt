@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.cli.jklib.pipeline
 
 import com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
-import org.jetbrains.kotlin.backend.jvm.JvmIrDeserializerImpl
 import org.jetbrains.kotlin.cli.common.*
 import org.jetbrains.kotlin.cli.common.ExitCode.COMPILATION_ERROR
 import org.jetbrains.kotlin.cli.common.arguments.K2JKlibCompilerArguments
@@ -19,7 +18,6 @@ import org.jetbrains.kotlin.cli.common.messages.MessageUtil
 import org.jetbrains.kotlin.cli.common.messages.OutputMessageUtil
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.*
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.convertToIrAndActualizeForJvm
 import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.createProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
@@ -37,6 +35,7 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.pipeline.*
 import org.jetbrains.kotlin.ir.KtDiagnosticReporterWithImplicitIrBasedContext
 import org.jetbrains.kotlin.ir.backend.jklib.JKlibModuleSerializer
+import org.jetbrains.kotlin.library.KlibFormat
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.KotlinLibraryVersioning
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
@@ -44,7 +43,6 @@ import org.jetbrains.kotlin.library.writer.KlibWriter
 import org.jetbrains.kotlin.library.writer.includeIr
 import org.jetbrains.kotlin.library.writer.includeMetadata
 import org.jetbrains.kotlin.compiler.plugin.getCompilerExtensions
-import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
 import org.jetbrains.kotlin.library.loader.KlibLoader
 import org.jetbrains.kotlin.library.loader.reportLoadingProblemsIfAny
 import org.jetbrains.kotlin.library.metadata.resolver.impl.KotlinResolvedLibraryImpl
@@ -57,11 +55,6 @@ import java.io.File
 import org.jetbrains.kotlin.cli.pipeline.*
 import org.jetbrains.kotlin.cli.jklib.prepareJKlibSessions
 import org.jetbrains.kotlin.konan.file.File as KFile
-
-// K2JKlibCompiler imports:
-// import org.jetbrains.kotlin.backend.common.serialization.IrSerializationSettings
-// import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
-// import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
 
 import org.jetbrains.kotlin.backend.common.serialization.IrSerializationSettings
 import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
@@ -83,7 +76,6 @@ object JKlibConfigurationPhase : PipelinePhase<ArgumentsPipelineArtifact<K2JKlib
         val paths = PathUtil.kotlinPathsForCompiler
         val rootDisposable = input.rootDisposable
 
-        configuration.put(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector)
         configuration.put(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector)
         configuration.put(CommonConfigurationKeys.PERF_MANAGER, input.performanceManager)
 
@@ -118,7 +110,7 @@ object JKlibConfigurationPhase : PipelinePhase<ArgumentsPipelineArtifact<K2JKlib
                     paths,
                     KotlinPaths::stdlibPath,
                     PathUtil.KOTLIN_JAVA_STDLIB_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -128,7 +120,7 @@ object JKlibConfigurationPhase : PipelinePhase<ArgumentsPipelineArtifact<K2JKlib
                     paths,
                     KotlinPaths::scriptRuntimePath,
                     PathUtil.KOTLIN_JAVA_SCRIPT_RUNTIME_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -140,7 +132,7 @@ object JKlibConfigurationPhase : PipelinePhase<ArgumentsPipelineArtifact<K2JKlib
                     paths,
                     KotlinPaths::reflectPath,
                     PathUtil.KOTLIN_JAVA_REFLECT_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-reflect' or '-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -171,7 +163,6 @@ object JKlibConfigurationPhase : PipelinePhase<ArgumentsPipelineArtifact<K2JKlib
 
         return ConfigurationPipelineArtifact(
             configuration,
-            DiagnosticsCollectorImpl(),
             rootDisposable
         )
     }
@@ -184,15 +175,14 @@ object JKlibFrontendPipelinePhase : PipelinePhase<ConfigurationPipelineArtifact,
         val configuration = input.configuration
         val messageCollector = configuration.getNotNull(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY)
         val rootDisposable = input.rootDisposable
-        val diagnosticsReporter = input.diagnosticCollector
+        val diagnosticsReporter = configuration.diagnosticsCollector
 
         val projectEnvironment = createProjectEnvironment(
             configuration,
             rootDisposable,
             EnvironmentConfigFiles.JVM_CONFIG_FILES,
-            messageCollector,
         )
-        val groupedSources = collectSources(configuration, projectEnvironment, messageCollector)
+        val groupedSources = collectSources(configuration, projectEnvironment)
 
         if (groupedSources.isEmpty()) {
             messageCollector.report(ERROR, "No source files")
@@ -253,7 +243,6 @@ object JKlibFrontendPipelinePhase : PipelinePhase<ConfigurationPipelineArtifact,
         return JKlibFrontendPipelineArtifact(
              AllModulesFrontendOutput(outputs),
              configuration,
-             diagnosticsReporter,
              ltFiles,
              projectEnvironment,
              rootDisposable
@@ -275,11 +264,11 @@ object JKlibFir2IrPipelinePhase : PipelinePhase<JKlibFrontendPipelineArtifact, J
     override fun executePhase(input: JKlibFrontendPipelineArtifact): JKlibFir2IrPipelineArtifact? {
         val configuration = input.configuration
         val firResult = input.frontendOutput
-        val diagnosticsReporter = input.diagnosticCollector
+        val diagnosticsReporter = configuration.diagnosticsCollector
         val projectEnvironment = input.projectEnvironment
         val rootDisposable = input.rootDisposable
 
-        val fir2IrExtensions = JvmFir2IrExtensions(configuration, JvmIrDeserializerImpl())
+        val fir2IrExtensions = JvmFir2IrExtensions(configuration)
         val irGenerationExtensions = configuration.getCompilerExtensions(IrGenerationExtension)
         
         val fir2IrResult = firResult.convertToIrAndActualizeForJvm(
@@ -289,7 +278,7 @@ object JKlibFir2IrPipelinePhase : PipelinePhase<JKlibFrontendPipelineArtifact, J
             irGenerationExtensions,
         )
 
-        return JKlibFir2IrPipelineArtifact(fir2IrResult, diagnosticsReporter, configuration, firResult, projectEnvironment, rootDisposable)
+        return JKlibFir2IrPipelineArtifact(fir2IrResult, configuration, firResult, projectEnvironment, rootDisposable)
     }
 }
 
@@ -299,39 +288,10 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
     override fun executePhase(input: JKlibFir2IrPipelineArtifact): JKlibExitArtifact? {
         val fir2IrResult = input.result
         val configuration = input.configuration
-        val diagnosticsReporter = input.diagnosticCollector
-        val rootDisposable = input.rootDisposable
+        val diagnosticsReporter = configuration.diagnosticsCollector
         
         val produceHeaderKlib = true
         
-        // Output destination calculation (from Arguments or Configuration)
-        val arguments = K2JKlibCompilerArguments() // Should get from arguments artifact really, or configuration 
-        // Configuration does not store destination? It stores PERF_MANAGER etc.
-        // Usually destination is in arguments.
-        // We lost arguments chain in ConfigurationPipelineArtifact?
-        // Wait, ConfigurationPipelineArtifact does not define arguments.
-        // But we usually don't need arguments if we have configuration.
-        // However, destination is not always in configuration unless put there.
-        // K2JKlibCompiler puts it in a File object but doesn't put into config?
-        // It checks arguments.destination.
-        
-        // FIXME: Destination should be passed down or stored in config.
-        // Ideally we should put destination in ConfigurationPipelineArtifact or CompilerConfiguration. 
-        // K2JVMCompiler stores it in configuration? No, it passes it to ModuleBuilder.
-        
-        // For now, I will assume we can get it from arguments if we had access.
-        // But we lost arguments.
-        // We should add 'destination' to ConfigurationPipelineArtifact? 
-        // Or store it in CompilerConfiguration with a custom key.
-        // Let's assume for MVP we use a default or temp if not found (impossible for real compiler).
-        // I will add a TODO and use a dummy file or check if we can retrieve it.
-        // In K2JKlibCompiler doExecute, destination is calculated and passed to compileLibrary.
-        // In pipeline, JKlibConfigurationPhase could put it in configuration using a custom key.
-        
-        // Let's add a custom key for destination in configuration in JKlibConfigurationPhase.
-        // But I already wrote JKlibConfigurationPhase.
-        
-        // I will use "ir.klib" as default for now and add TODO.
         val destination = File(configuration[JKLIB_OUTPUT_DESTINATION] ?: "result.klib")
 
         try {
@@ -344,11 +304,7 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
                     configuration.languageVersionSettings
                 ),
                 cleanFiles = emptyList(),
-                dependencies = emptyList(), // We might need to pass resolved libraries?
-                // JKlibFrontendPipelinePhase resolved libraries but didn't pass them to Fir2IrArtifact...
-                // They are needed for serialization?
-                // K2JKlibCompiler reused `resolvedLibraries` list.
-                // We should add `resolvedLibraries` to JKlibFrontendPipelineArtifact/JKlibFir2IrPipelineArtifact.
+                dependencies = emptyList(), 
                 createModuleSerializer = { irDiagnosticReporter: IrDiagnosticReporter ->
                     JKlibModuleSerializer(IrSerializationSettings(configuration), irDiagnosticReporter)
                 },
@@ -368,6 +324,7 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
             )
 
             KlibWriter {
+                format(KlibFormat.ZipArchive)
                 manifest {
                     moduleName(configuration[CommonConfigurationKeys.MODULE_NAME]!!)
                     versions(versions)
@@ -383,11 +340,16 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
                 OutputMessageUtil.renderException(e),
                 MessageUtil.psiElementToMessageLocation(e.element),
             )
-            return JKlibExitArtifact(ExitCode.INTERNAL_ERROR)
+            return JKlibExitArtifact(ExitCode.INTERNAL_ERROR, configuration)
         }
 
-        return JKlibExitArtifact(ExitCode.OK)
+        return JKlibExitArtifact(ExitCode.OK, configuration)
     }
 }
 
-class JKlibExitArtifact(override val exitCode: ExitCode) : org.jetbrains.kotlin.cli.pipeline.PipelineArtifactWithExitCode()
+class JKlibExitArtifact(override val exitCode: ExitCode, override val configuration: CompilerConfiguration) : org.jetbrains.kotlin.cli.pipeline.PipelineArtifactWithExitCode() {
+    @CliPipelineInternals(OPT_IN_MESSAGE)
+    override fun withCompilerConfiguration(newConfiguration: CompilerConfiguration): PipelineArtifact {
+        return JKlibExitArtifact(exitCode, newConfiguration)
+    }
+}

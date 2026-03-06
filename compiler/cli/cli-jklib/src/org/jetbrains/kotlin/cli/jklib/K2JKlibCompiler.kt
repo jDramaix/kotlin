@@ -14,7 +14,6 @@ import org.jetbrains.kotlin.backend.common.linkage.issues.checkNoUnboundSymbols
 import org.jetbrains.kotlin.backend.common.serialization.*
 import org.jetbrains.kotlin.backend.common.serialization.signature.IdSignatureDescriptor
 import org.jetbrains.kotlin.backend.jvm.JvmGeneratorExtensionsImpl
-import org.jetbrains.kotlin.backend.jvm.JvmIrDeserializerImpl
 import org.jetbrains.kotlin.builtins.jvm.JvmBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JvmBuiltInsPackageFragmentProvider
 import org.jetbrains.kotlin.cli.common.*
@@ -269,7 +268,6 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
             configuration,
             disposable,
             EnvironmentConfigFiles.JVM_CONFIG_FILES,
-            messageCollector,
         )
 
         val klibFiles = configuration.getList(JVMConfigurationKeys.KLIB_PATHS) + klib.absolutePath
@@ -370,7 +368,6 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
             configuration.languageVersionSettings,
             storageManager,
             runtimeModule?.builtIns,
-            packageAccessHandler = null,
             lookupTracker = lookupTracker,
         )
         if (isBuiltIns) runtimeModule = md
@@ -410,7 +407,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
                     paths,
                     KotlinPaths::stdlibPath,
                     PathUtil.KOTLIN_JAVA_STDLIB_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -420,7 +417,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
                     paths,
                     KotlinPaths::scriptRuntimePath,
                     PathUtil.KOTLIN_JAVA_SCRIPT_RUNTIME_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -435,7 +432,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
                     paths,
                     KotlinPaths::reflectPath,
                     PathUtil.KOTLIN_JAVA_REFLECT_JAR,
-                    messageCollector,
+                    configuration,
                     "'-no-reflect' or '-no-stdlib'",
                 )?.let { file ->
                     add(CLIConfigurationKeys.CONTENT_ROOTS, JvmModulePathRoot(file))
@@ -479,9 +476,8 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
             configuration,
             rootDisposable,
             EnvironmentConfigFiles.JVM_CONFIG_FILES,
-            collector,
         )
-        val groupedSources = collectSources(configuration, projectEnvironment, collector)
+        val groupedSources = collectSources(configuration, projectEnvironment)
 
         if (groupedSources.isEmpty()) {
             if (arguments.version) {
@@ -557,7 +553,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
 
             val firResult = AllModulesFrontendOutput(outputs)
 
-            val fir2IrExtensions = JvmFir2IrExtensions(configuration, JvmIrDeserializerImpl())
+            val fir2IrExtensions = JvmFir2IrExtensions(configuration)
             val irGenerationExtensions = configuration.getCompilerExtensions(IrGenerationExtension)
             val fir2IrResult = firResult.convertToIrAndActualizeForJvm(
                 fir2IrExtensions,
