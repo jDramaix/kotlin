@@ -120,7 +120,6 @@ fun JavaExec.configureJklibCompilation(
     sourceTask: TaskProvider<Sync>,
     klibOutput: Provider<RegularFile>,
     classpathJar: Provider<RegularFile>,
-    extraClasspath: FileCollection = project.files()
 ) {
     dependsOn(sourceTask)
     
@@ -144,8 +143,10 @@ fun JavaExec.configureJklibCompilation(
 
     doFirst {
         val allFiles = inputs.files.files.filter { it.extension == "kt" }
-        val commonFiles = allFiles.filter { it.path.contains("/common/") }
-        val jvmFiles = allFiles.filter { !it.path.contains("/common/") }
+        
+        val commonPathSegment = "${File.separator}common${File.separator}"
+        val commonFiles = allFiles.filter { it.path.contains(commonPathSegment) }
+        val jvmFiles = allFiles.filter { !it.path.contains(commonPathSegment) }
 
         val jvmSourceFiles = jvmFiles.map { it.absolutePath }
         val commonSourceFiles = commonFiles.map { it.absolutePath }
@@ -179,7 +180,6 @@ fun JavaExec.configureJklibCompilation(
         val fullClasspath = listOfNotNull(
             classpathJar.get().asFile.absolutePath,
             kotlinReflectJar?.absolutePath,
-            extraClasspath.asPath
         ).joinToString(File.pathSeparator)
 
         args("-classpath", fullClasspath)
