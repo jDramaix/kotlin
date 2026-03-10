@@ -5,24 +5,20 @@
 
 package org.jetbrains.kotlin.jklib.test.irText
 
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKLIB_OUTPUT_DESTINATION
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.EnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.sourceFileProvider
+import org.jetbrains.kotlin.test.services.configuration.addSourcesForDependsOnClosure
 import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
 import java.io.File
 
 class JKlibSourceRootConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
 
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
-        module.files.filter { it.name.endsWith(".kt") || it.name.endsWith(".kts") }.forEach { testFile ->
-            val realFile = testServices.sourceFileProvider.getOrCreateRealFileForSourceFile(testFile)
-            configuration.addKotlinSourceRoot(realFile.absolutePath)
-        }
+        configuration.addSourcesForDependsOnClosure(module, testServices)
 
         val stdlibKlib = System.getProperty("kotlin.stdlib.jvm.ir.klib")
         if (stdlibKlib != null) {
