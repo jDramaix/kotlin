@@ -30,15 +30,10 @@ val copyMinimalSources by tasks.registering(Sync::class) {
     dependsOn(":prepare:build.version:writeStdlibVersion")
     into(layout.buildDirectory.dir("src/genesis-minimal"))
 
-    from("src/stubs/jvm/builtins") {
-        include("**")
-        into("jvm/builtins")
-    }
-
     from("src/stubs") {
         include("kotlin/**")
         include("kotlin/util/**")
-        into("common/src")
+        into("src/common")
     }
 
     from(stdlibProjectDir.resolve("src")) {
@@ -74,46 +69,52 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             "kotlin/contracts/ContractBuilder.kt",
             "kotlin/contracts/Effect.kt",
         )
-        into("common/src")
+        into("src/common")
     }
-    
+
 
     from(stdlibProjectDir.resolve("common/src")) {
         include(
             "kotlin/ExceptionsH.kt",
         )
-        into("common/common")
+        into("src/common")
     }
 
-    from(stdlibProjectDir.resolve("jvm/runtime")) {
-        include(
-            "kotlin/NoWhenBranchMatchedException.kt",
-            "kotlin/UninitializedPropertyAccessException.kt",
-            "kotlin/TypeAliases.kt",
-            "kotlin/text/TypeAliases.kt",
-        )
-        into("jvm/runtime")
-    }
-    from(stdlibProjectDir.resolve("jvm/src")) {
-        include(
-            "kotlin/ArrayIntrinsics.kt",
-            "kotlin/Unit.kt",
-            "kotlin/collections/TypeAliases.kt",
-            "kotlin/enums/EnumEntriesJVM.kt",
-            "kotlin/io/Serializable.kt",
-        )
-        into("jvm/src")
-    }
-    
-    from(stdlibProjectDir.resolve("jvm/builtins")) {
-        include("*.kt")
-        exclude("Char.kt")
-        exclude("Primitives.kt")
-        exclude("Collections.kt")
-        into("jvm/builtins")
+    from("src/stubs/jvm/builtins") {
+        include("**")
+        into("src/jvm")
     }
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(stdlibProjectDir.resolve("jvm")) {
+        include(
+            "runtime/kotlin/NoWhenBranchMatchedException.kt",
+            "runtime/kotlin/UninitializedPropertyAccessException.kt",
+            "runtime/kotlin/TypeAliases.kt",
+            "runtime/kotlin/text/TypeAliases.kt",
+            "src/kotlin/ArrayIntrinsics.kt",
+            "src/kotlin/Unit.kt",
+            "src/kotlin/collections/TypeAliases.kt",
+            "src/kotlin/enums/EnumEntriesJVM.kt",
+            "src/kotlin/io/Serializable.kt",
+            "builtins/*.kt"
+        )
+        exclude(
+            "builtins/Char.kt",
+            "builtins/Primitives.kt",
+            "builtins/Collections.kt"
+        )
+        into("src/jvm")
+    }
+
+    from(stdlibProjectDir.resolve("jvm-minimal-for-test/jvm-src")) {
+        include(
+            "minimalAtomics.kt",
+            "minimalThrowables.kt",
+        )
+        into("src/jvm")
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 }
 
 fun JavaExec.configureJklibCompilation(
