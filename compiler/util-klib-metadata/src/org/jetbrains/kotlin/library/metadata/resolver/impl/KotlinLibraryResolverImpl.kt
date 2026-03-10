@@ -211,8 +211,6 @@ class KotlinLibraryResolverResultImpl(
 
     override fun getFullList(): List<KotlinLibrary> = all.map { it.library }
 
-    override fun getFullResolvedList(): List<KotlinResolvedLibrary> = all
-
     override fun forEach(action: (KotlinLibrary) -> Unit) {
         all.forEach { action(it.library) }
     }
