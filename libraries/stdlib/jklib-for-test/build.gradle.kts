@@ -15,7 +15,11 @@ dependencies {
         isTransitive = false
     }
     implementation(intellijCore())
+    
+    // Transitive dependencies pulled by IntellijCore
+    // Used for IR interning and seriliazation and other things
     implementation(libs.intellij.fastutil)
+    // Used to read XML metadata files inside META-INF
     implementation(commonDependency("org.codehaus.woodstox:stax2-api"))
     implementation(commonDependency("com.fasterxml:aalto-xml"))
 }
@@ -37,27 +41,23 @@ val copyMinimalSources by tasks.registering(Sync::class) {
         into("common/src")
     }
 
-    // Common Sources - mirroring jvm-minimal-for-test
     from(stdlibProjectDir.resolve("src")) {
         include(
             "kotlin/Annotation.kt",
+            "kotlin/Annotations.kt",
             "kotlin/Any.kt",
             "kotlin/Array.kt",
             "kotlin/ArrayIntrinsics.kt",
             "kotlin/Arrays.kt",
             "kotlin/Boolean.kt",
-            //"kotlin/Char.kt", // Used via stub in src/stubs/kotlin/Char.kt
             "kotlin/CharSequence.kt",
-            //"kotlin/Collections.kt",
             "kotlin/Comparable.kt",
             "kotlin/Enum.kt",
-            //"kotlin/enums/EnumEntries.kt", // Used via stub in src/stubs/kotlin/enums/EnumEntries.kt
             "kotlin/Function.kt",
             "kotlin/Iterator.kt",
             "kotlin/Library.kt",
             "kotlin/Nothing.kt",
             "kotlin/Number.kt",
-            //"kotlin/Primitives.kt", // Used via stub in src/stubs/kotlin/Primitives.kt
             "kotlin/String.kt",
             "kotlin/Throwable.kt",
             "kotlin/Unit.kt",
@@ -73,8 +73,6 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             "kotlin/contextParameters/ContextOf.kt",
             "kotlin/contracts/ContractBuilder.kt",
             "kotlin/contracts/Effect.kt",
-            "kotlin/Annotations.kt", // Defines SinceKotlin, Deprecated, etc.
-            "kotlin/ExceptionsH.kt",
         )
         into("common/src")
     }
@@ -87,7 +85,6 @@ val copyMinimalSources by tasks.registering(Sync::class) {
         into("common/common")
     }
 
-    // JVM Sources - mirroring jvm-minimal-for-test
     from(stdlibProjectDir.resolve("jvm/runtime")) {
         include(
             "kotlin/NoWhenBranchMatchedException.kt",
@@ -101,11 +98,9 @@ val copyMinimalSources by tasks.registering(Sync::class) {
         include(
             "kotlin/ArrayIntrinsics.kt",
             "kotlin/Unit.kt",
-            "kotlin/annotation/Annotations.kt",
             "kotlin/collections/TypeAliases.kt",
             "kotlin/enums/EnumEntriesJVM.kt",
             "kotlin/io/Serializable.kt",
-            "kotlin/Annotations.kt", // Defines SinceKotlin, Deprecated, etc.
         )
         into("jvm/src")
     }
@@ -129,32 +124,22 @@ fun JavaExec.configureJklibCompilation(
 ) {
     dependsOn(sourceTask)
     
-    // Add dependency on the jar task to ensure it's built
     dependsOn(classpathJar)
     
-    // Use the standard runtime classpath from the 'main' source set
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("org.jetbrains.kotlin.cli.jklib.K2JKlibCompiler")
 
-    // Inputs/Outputs for incremental build
     val inputDir = sourceTask.map { it.destinationDir }
     val sourceTree = fileTree(inputDir) {
         include("**/*")
     }
     inputs.files(sourceTree)
-    
-    // Add Jar as input
     inputs.file(classpathJar)
-    
     outputs.file(klibOutput)
 
     val runtimeClasspath = project.configurations.getByName("runtimeClasspath")
-    // Capture the file collection at configuration time, but map it to value at execution if needed, 
-    // or just pass the file collection to inputs to be safe.
-    // Actually, simple way: filter it now.
     val kotlinReflectFileCollection = runtimeClasspath.filter { it.name.startsWith("kotlin-reflect") }
     
-    // Add to inputs
     inputs.files(kotlinReflectFileCollection)
 
     doFirst {
@@ -213,22 +198,17 @@ val compileStdlib by tasks.registering(JavaExec::class) {
     })
     configureJklibCompilation(copyMinimalSources, outputKlib, fullStdlibJarProvider)
     
-    // Suppress "Actual without expect" errors typical in minimal stdlib
     args("-nowarn") 
 }
 
-// Alias task for compatibility
 val compileMinimalStdlib by tasks.registering {
     dependsOn(compileStdlib)
 }
 
-// Expose the KLIB artifact
 val distJKlib by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
 }
-
-// Alias configuration for compatibility
 val distMinimalJKlib by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
