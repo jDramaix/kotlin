@@ -17,8 +17,10 @@ import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.EnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
+import org.jetbrains.kotlin.test.services.assertions
 import org.jetbrains.kotlin.test.services.sourceFileProvider
 import org.jetbrains.kotlin.test.util.KtTestUtil
+import org.jetbrains.kotlin.test.MockLibraryUtil
 import java.io.File
 
 class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
@@ -48,7 +50,7 @@ class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfi
         val withReflect = JvmEnvironmentConfigurationDirectives.WITH_REFLECT in module.directives
 
         if (withReflect) {
-            throw org.opentest4j.TestAbortedException("WITH_REFLECT is not supported in JKlib tests")
+            testServices.assertions.fail { "WITH_REFLECT is not supported in JKlib tests" }
         }
 
         configuration.configureJdkClasspathRoots()
@@ -63,17 +65,21 @@ class JKlibJavaSourceConfigurator(testServices: TestServices) : EnvironmentConfi
 
         val javaFilesReal = javaFiles.map { testServices.sourceFileProvider.getOrCreateRealFileForSourceFile(it) }
 
-        if (JvmEnvironmentConfigurationDirectives.PROVIDE_JAVA_AS_BINARIES !in registeredDirectives) {
-            throw org.opentest4j.TestAbortedException("JKlib does not support Java/Kotlin cross-compilation. Please use PROVIDE_JAVA_AS_BINARIES")
-        }
 
-        val compiledJar = org.jetbrains.kotlin.test.MockLibraryUtil.compileJavaFilesLibraryToJar(
-            javaDir.path,
-            "${module.name}-java-binaries",
-            extraClasspath = jvmClasspathRoots,
-            assertions = org.jetbrains.kotlin.test.services.JUnit5Assertions,
-            useJava11 = true // Requires jdk.11.home to be set in build.gradle.kts
-        )
-        configuration.addJvmClasspathRoot(compiledJar)
+        try {
+            val compiledJar = MockLibraryUtil.compileJavaFilesLibraryToJar(
+                javaDir.path,
+                "${module.name}-java-binaries",
+                extraClasspath = jvmClasspathRoots,
+                assertions = testServices.assertions,
+                useJava11 = true // Requires jdk.11.home to be set in build.gradle.kts
+            )
+            configuration.addJvmClasspathRoot(compiledJar)
+        } catch (e: Throwable) {
+            testServices.assertions.fail {
+                "Java Compilation failed. Notice: This might be caused by a circular dependency between Java and Kotlin sources, which is not supported in JKlib since it compiles Java to a JAR independently.\n" +
+                "Underlying error: ${e.message}"
+            }
+        }
     }
 }

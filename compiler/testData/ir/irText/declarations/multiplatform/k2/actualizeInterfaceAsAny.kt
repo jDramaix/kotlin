@@ -1,7 +1,6 @@
 // IGNORE_BACKEND_K1: ANY
 // FIR_IDENTICAL
 // LANGUAGE: +MultiPlatformProjects +AllowAnyAsAnActualTypeForExpectInterface
-// IGNORE_BACKEND: JKLIB
 
 // MODULE: common
 // FILE: common.kt
