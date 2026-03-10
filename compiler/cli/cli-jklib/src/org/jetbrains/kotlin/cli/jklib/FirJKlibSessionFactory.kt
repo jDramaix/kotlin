@@ -147,7 +147,7 @@ object FirJKlibSessionFactory : FirAbstractSessionFactory<FirJKlibSessionFactory
         configuration: CompilerConfiguration,
         predefinedJavaComponents: FirSharableJavaComponents?,
         needRegisterJavaElementFinder: Boolean,
-        packagePartProvider: PackagePartProvider, // TODO create a separate SourceContext to not pass this argument here
+        packagePartProvider: PackagePartProvider,
         isForLeafHmppModule: Boolean,
         init: FirSessionConfigurator.() -> Unit,
     ): FirSession {
@@ -212,7 +212,7 @@ object FirJKlibSessionFactory : FirAbstractSessionFactory<FirJKlibSessionFactory
 
     override fun FirSession.registerSourceSessionComponents(c: Context) {
         registerLibrarySessionComponents(c)
-        register(FirJvmTargetProvider::class, FirJvmTargetProvider(JvmTarget.Companion.DEFAULT))
+        register(FirJvmTargetProvider::class, FirJvmTargetProvider(JvmTarget.DEFAULT))
     }
 
     override val requiresSpecialSetupOfSourceProvidersInHmppCompilation: Boolean
