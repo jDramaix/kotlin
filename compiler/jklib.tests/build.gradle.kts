@@ -8,13 +8,9 @@ plugins {
 dependencies {
     api(kotlinStdlib())
     testFixturesApi(testFixtures(project(":generators:test-generator")))
-    testFixturesApi(testFixtures(project(":compiler:tests-common")))
     testFixturesApi(testFixtures(project(":compiler:tests-integration")))
-    testFixturesApi(testFixtures(project(":compiler:tests-compiler-utils")))
     testFixturesImplementation(project(":compiler:cli-jklib"))
 
-    testFixturesCompileOnly(intellijCore())
-    testRuntimeOnly(intellijCore())
     testFixturesApi("org.junit.jupiter:junit-jupiter")
     testCompileOnly(libs.junit4)
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
@@ -38,7 +34,6 @@ projectTests {
     testGenerator("org.jetbrains.kotlin.generators.tests.GenerateJklibTestsKt", generateTestsInBuildDirectory = true)
 }
 
-optInToK1Deprecation()
 val stdlibJvmIr by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
