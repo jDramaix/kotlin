@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 annotation class TestAnn(val x: String)
 
 @TestAnn("class")

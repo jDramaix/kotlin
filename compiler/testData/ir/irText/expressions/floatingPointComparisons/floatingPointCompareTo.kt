@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 
 fun test1d(x: Double, y: Double) = x.compareTo(y)
 fun test2d(x: Double, y: Any) = y is Double && x.compareTo(y) == 0

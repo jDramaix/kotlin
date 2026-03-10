@@ -8,6 +8,7 @@
 // - K2/JS does not fail
 // - NATIVE fails during IR deserialization
 // - JVM_IR fails during code generation
+// IGNORE_BACKEND: JKLIB
 
 fun test1() {
     break

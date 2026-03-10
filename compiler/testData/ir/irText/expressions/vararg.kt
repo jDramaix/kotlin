@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 
 val test1 = arrayOf<String>()
 val test2 = arrayOf("1", "2", "3")

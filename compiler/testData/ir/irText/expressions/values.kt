@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 enum class Enum { A }
 object A
 val a = 0

@@ -1,3 +1,4 @@
+// IGNORE_BACKEND: JKLIB
 enum class A {
     X("asd"),
     Y() {

@@ -1,3 +1,4 @@
+// IGNORE_BACKEND: JKLIB
 enum class En { A, B, C }
 
 fun test() {

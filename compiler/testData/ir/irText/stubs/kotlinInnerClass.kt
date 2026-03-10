@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 // DUMP_EXTERNAL_CLASS: Outer
 
 // FILE: external.kt

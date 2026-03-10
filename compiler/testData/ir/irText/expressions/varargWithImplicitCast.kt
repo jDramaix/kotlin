@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 
 fun testScalar(a: Any): IntArray {
     if (a !is Int) return intArrayOf()

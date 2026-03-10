@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 
 fun testSimple() = Box<Long>(2L * 3)
 

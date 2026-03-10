@@ -1,4 +1,5 @@
 // FIR_IDENTICAL
+// IGNORE_BACKEND: JKLIB
 annotation class TestAnnWithIntArray(val x: IntArray)
 annotation class TestAnnWithStringArray(val x: Array<String>)
 

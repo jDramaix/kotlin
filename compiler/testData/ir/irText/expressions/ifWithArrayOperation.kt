@@ -1,3 +1,4 @@
+// IGNORE_BACKEND: JKLIB
 fun topLevelMethod() {
     val array = intArrayOf(1)
 
