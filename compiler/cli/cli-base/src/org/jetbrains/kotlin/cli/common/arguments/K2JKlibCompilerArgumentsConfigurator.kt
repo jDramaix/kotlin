@@ -47,19 +47,19 @@ class K2JKlibCompilerArgumentsConfigurator : CommonCompilerArgumentsConfigurator
     }
 
     private fun K2JKlibCompilerArguments.configureJvmDefaultMode(
-        reporter: Reporter?
+        reporter: Reporter?,
     ): JvmDefaultMode? =
         when {
-        jvmDefault != null ->
-            JvmDefaultMode.fromStringOrNull(jvmDefault).also {
-            if (it == null) {
-                reporter?.reportError(
-                "Unknown -jvm-default mode: $jvmDefault, supported modes: " +
-                    "${JvmDefaultMode.entries.map(JvmDefaultMode::description)}",
-                )
-            }
-            }
+            jvmDefault != null ->
+                JvmDefaultMode.fromStringOrNull(jvmDefault).also {
+                    if (it == null) {
+                        reporter?.reportError(
+                            "Unknown -jvm-default mode: $jvmDefault, supported modes: " +
+                                    "${JvmDefaultMode.entries.map(JvmDefaultMode::description)}",
+                        )
+                    }
+                }
 
-        else -> null
-    }
+            else -> null
+        }
 }

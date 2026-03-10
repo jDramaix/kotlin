@@ -1,41 +1,35 @@
+/*
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.jklib.test.irText
 
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
+import org.jetbrains.kotlin.test.backend.handlers.NoFirCompilationErrorsHandler
 import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
 import org.jetbrains.kotlin.test.builders.*
-import org.jetbrains.kotlin.test.configuration.commonHandlersForCodegenTest
 import org.jetbrains.kotlin.test.configuration.setupDefaultDirectivesForIrTextTest
 import org.jetbrains.kotlin.test.configuration.setupIrTextDumpHandlers
-import org.jetbrains.kotlin.test.model.*
-import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
-import org.jetbrains.kotlin.test.model.DependencyKind
-import org.jetbrains.kotlin.test.configuration.commonServicesConfigurationForCodegenAndDebugTest
-import org.jetbrains.kotlin.test.services.PhasedPipelineChecker
-import org.jetbrains.kotlin.test.services.TestPhase
-import org.jetbrains.kotlin.test.backend.handlers.NoFirCompilationErrorsHandler
-import org.jetbrains.kotlin.test.builders.firHandlersStep
-import org.jetbrains.kotlin.test.builders.irHandlersStep
-import org.jetbrains.kotlin.test.builders.klibArtifactsHandlersStep
-import org.jetbrains.kotlin.utils.bind
-
 import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
 import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
-
-import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
-
+import org.jetbrains.kotlin.test.model.*
+import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
+import org.jetbrains.kotlin.test.services.PhasedPipelineChecker
+import org.jetbrains.kotlin.test.services.TestPhase
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
-import org.jetbrains.kotlin.test.services.configuration.JvmEnvironmentConfigurator
-import org.jetbrains.kotlin.test.services.configuration.JvmForeignAnnotationsConfigurator
+import org.jetbrains.kotlin.test.services.fir.FirSpecificParserSuppressor
 import org.jetbrains.kotlin.test.services.moduleStructure
 import org.jetbrains.kotlin.test.services.sourceProviders.AdditionalDiagnosticsSourceFilesProvider
 import org.jetbrains.kotlin.test.services.sourceProviders.CoroutineHelpersSourceFilesProvider
-import org.jetbrains.kotlin.test.services.fir.FirSpecificParserSuppressor
+import org.jetbrains.kotlin.utils.bind
 
 
 abstract class AbstractJKlibIrTextTestBase<FrontendOutput : ResultingArtifact.FrontendOutput<FrontendOutput>>(
-    val targetFrontend: FrontendKind<FrontendOutput>
+    val targetFrontend: FrontendKind<FrontendOutput>,
 ) : AbstractKotlinCompilerWithTargetBackendTest(TargetBackend.JVM_IR) {
     abstract val frontendFacade: Constructor<FrontendFacade<FrontendOutput>>
     abstract val frontendToBackendConverter: Constructor<Frontend2BackendConverter<FrontendOutput, IrBackendInput>>
@@ -63,7 +57,7 @@ abstract class AbstractJKlibIrTextTestBase<FrontendOutput : ResultingArtifact.Fr
             ::CoroutineHelpersSourceFilesProvider,
         )
 
-        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper , ::MuteListSkipper)
+        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper, ::MuteListSkipper)
 
         facadeStep(frontendFacade)
         firHandlersStep {
@@ -92,7 +86,8 @@ abstract class AbstractJKlibIrTextTestBase<FrontendOutput : ResultingArtifact.Fr
     }
 }
 
-class WithStdlibSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) : org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+class WithStdlibSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) :
+    org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
     override val directiveContainers: List<org.jetbrains.kotlin.test.directives.model.DirectivesContainer>
         get() = listOf(org.jetbrains.kotlin.test.directives.ConfigurationDirectives)
 
@@ -101,7 +96,8 @@ class WithStdlibSkipper(testServices: org.jetbrains.kotlin.test.services.TestSer
     }
 }
 
-class WithReflectSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) : org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+class WithReflectSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) :
+    org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
     override val directiveContainers: List<org.jetbrains.kotlin.test.directives.model.DirectivesContainer>
         get() = listOf(JvmEnvironmentConfigurationDirectives)
 
@@ -110,30 +106,31 @@ class WithReflectSkipper(testServices: org.jetbrains.kotlin.test.services.TestSe
     }
 }
 
-class MuteListSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) : org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+class MuteListSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) :
+    org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
     // TODO: joseefort - fix minimal stdlib to get all tests to match
     companion object {
         private val mutedTests = setOf(
-            
+
             // Basic Reflect Classes not included in minimal stdlib failures
-           "testBoundCallableReferences", // Missing class/es: kotlin.reflect.KProperty0
-           "testClassLiteralInAnnotation", // Missing class/es: kotlin.reflect.KClass
-           "testConstExpressionsInAnnotationArguments", // Missing class/es: kotlin.reflect.KType
-           "testConstFromBuiltins", // Missing class/es: kotlin.reflect.KType
-           "testConstValInitializers", // Missing class/es: kotlin.reflect.KType
-           "testDelegateForExtPropertyInClass", // Missing class/es: kotlin.reflect.KProperty, kotlin.reflect.KProperty2
-           "testDelegatedPropertyAccessorsWithAnnotations", // Missing class/es: kotlin.reflect.KProperty0, kotlin.reflect.KMutableProperty0
-           "testGenericDelegatedProperty", // Missing class/es: kotlin.reflect.KMutableProperty1
-           "testGenericMember", // Missing class/es: kotlin.reflect.KProperty1
-           "testGenericPropertyRef", // Missing class/es: kotlin.reflect.KProperty1, kotlin.reflect.KMutableProperty1
-           "testGenericPropertyReferenceType", // Missing class/es: kotlin.reflect.KMutableProperty, kotlin.reflect.KMutableProperty0
-           "testImportedFromObject", // Missing class/es: kotlin.reflect.KProperty0
-           "testKt28006", // Missing class/es: kotlin.reflect.KType
-           "testKt52677", // Missing class/es: kotlin.annotation.Target, kotlin.reflect.KClass, kotlin.annotation.AnnotationTarget
-           "testLocal", // Missing class/es: kotlin.reflect.KProperty0
-           "testMember", // Missing class/es: kotlin.reflect.KProperty1
-           "testMemberExtension", // Missing class/es: kotlin.reflect.KProperty2
-           "testTopLevel", // Missing class/es: kotlin.reflect.KProperty0
+            "testBoundCallableReferences", // Missing class/es: kotlin.reflect.KProperty0
+            "testClassLiteralInAnnotation", // Missing class/es: kotlin.reflect.KClass
+            "testConstExpressionsInAnnotationArguments", // Missing class/es: kotlin.reflect.KType
+            "testConstFromBuiltins", // Missing class/es: kotlin.reflect.KType
+            "testConstValInitializers", // Missing class/es: kotlin.reflect.KType
+            "testDelegateForExtPropertyInClass", // Missing class/es: kotlin.reflect.KProperty, kotlin.reflect.KProperty2
+            "testDelegatedPropertyAccessorsWithAnnotations", // Missing class/es: kotlin.reflect.KProperty0, kotlin.reflect.KMutableProperty0
+            "testGenericDelegatedProperty", // Missing class/es: kotlin.reflect.KMutableProperty1
+            "testGenericMember", // Missing class/es: kotlin.reflect.KProperty1
+            "testGenericPropertyRef", // Missing class/es: kotlin.reflect.KProperty1, kotlin.reflect.KMutableProperty1
+            "testGenericPropertyReferenceType", // Missing class/es: kotlin.reflect.KMutableProperty, kotlin.reflect.KMutableProperty0
+            "testImportedFromObject", // Missing class/es: kotlin.reflect.KProperty0
+            "testKt28006", // Missing class/es: kotlin.reflect.KType
+            "testKt52677", // Missing class/es: kotlin.annotation.Target, kotlin.reflect.KClass, kotlin.annotation.AnnotationTarget
+            "testLocal", // Missing class/es: kotlin.reflect.KProperty0
+            "testMember", // Missing class/es: kotlin.reflect.KProperty1
+            "testMemberExtension", // Missing class/es: kotlin.reflect.KProperty2
+            "testTopLevel", // Missing class/es: kotlin.reflect.KProperty0
             // Basic Reflect Classes not included in minimal stdlib failures
 
             // Symbol resolution compilation failures due to stdlib mismatches
@@ -242,7 +239,8 @@ class MuteListSkipper(testServices: org.jetbrains.kotlin.test.services.TestServi
     override fun shouldSkipTest(): Boolean {
         val originalFile = testServices.moduleStructure.originalTestDataFiles.first()
         val name = originalFile.nameWithoutExtension
-        val testName = "test" + name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+        val testName =
+            "test" + name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
         return testName in mutedTests
     }
 }

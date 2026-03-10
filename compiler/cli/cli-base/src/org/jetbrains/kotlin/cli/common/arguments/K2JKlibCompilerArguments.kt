@@ -2,12 +2,10 @@ package org.jetbrains.kotlin.cli.common.arguments
 
 import com.intellij.util.xmlb.annotations.Transient
 
-import org.jetbrains.kotlin.config.*
-import java.io.Serializable
-
 class K2JKlibCompilerArguments : CommonCompilerArguments() {
     companion object {
-        @JvmStatic private val serialVersionUID = 0L
+        @JvmStatic
+        private val serialVersionUID = 0L
     }
 
     @Argument(value = "-d", valueDescription = "<klib>", description = "Destination for generated files.")
@@ -100,6 +98,7 @@ class K2JKlibCompilerArguments : CommonCompilerArguments() {
             checkFrozen()
             field = value
         }
+
     @Argument(
         value = "-Xtype-enhancement-improvements-strict-mode",
         description = """Enable strict mode for improvements to type enhancement for loaded Java types based on nullability annotations,
@@ -248,16 +247,16 @@ Modes:
         value = "-Xsam-conversions",
         valueDescription = "{class|indy}",
         description =
-        """Select the code generation scheme for SAM conversions.
+            """Select the code generation scheme for SAM conversions.
 -Xsam-conversions=indy          Generate SAM conversions using 'invokedynamic' with 'LambdaMetafactory.metafactory'.
 -Xsam-conversions=class         Generate SAM conversions as explicit classes.
 The default value is 'indy'.""",
     )
     var samConversions: String? = null
         set(value) {
-        checkFrozen()
-        field = if (value.isNullOrEmpty()) null else value
-    }
+            checkFrozen()
+            field = if (value.isNullOrEmpty()) null else value
+        }
 
 
     override fun copyOf(): Freezable = TODO() // copyK2JKlibCompilerArguments(this, K2JKlibCompilerArguments())

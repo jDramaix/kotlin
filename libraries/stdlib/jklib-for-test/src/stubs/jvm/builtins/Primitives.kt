@@ -1,10 +1,15 @@
-// Stubbed to provide dummy positive literals (e.g. MIN_VALUE = 1L) because the compiler parser treats negative literals as 
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+@file:Suppress("NOTHING_TO_INLINE")
+
+package kotlin
+
+// Stubbed to provide dummy positive literals (e.g. MIN_VALUE = 1L) because the compiler parser treats negative literals as
 // IrCall instead of IrConst, causing IrFileSerializer crashes during minimal bootstrapping.
 // Omits inc() and dec() operators to avoid bootstrap circularities.
 // jvm-minimal-for-test includes the real source.
-@file:Suppress("NOTHING_TO_INLINE")
-package kotlin
-
 // Boolean is in Boolean.kt
 
 public actual class Byte : Number(), Comparable<Byte> {
@@ -12,6 +17,7 @@ public actual class Byte : Number(), Comparable<Byte> {
         public actual const val MIN_VALUE: Byte = -128
         public actual const val MAX_VALUE: Byte = 127
     }
+
     public actual override fun toByte(): Byte = this
     public actual override fun toShort(): Short = this.toShort()
     public actual override fun toInt(): Int = this.toInt()
@@ -41,6 +47,7 @@ public actual class Short : Number(), Comparable<Short> {
         public actual const val MIN_VALUE: Short = -32768
         public actual const val MAX_VALUE: Short = 32767
     }
+
     public actual override fun toByte(): Byte = this.toByte()
     public actual override fun toShort(): Short = this
     public actual override fun toInt(): Int = this.toInt()
@@ -70,6 +77,7 @@ public actual class Int : Number(), Comparable<Int> {
         public actual const val MIN_VALUE: Int = -2147483648
         public actual const val MAX_VALUE: Int = 2147483647
     }
+
     public actual override fun toByte(): Byte = this.toByte()
     public actual override fun toShort(): Short = this.toShort()
     public actual override fun toInt(): Int = this
@@ -95,7 +103,7 @@ public actual class Int : Number(), Comparable<Int> {
     public actual operator fun div(other: Long): Long = 0
     public actual operator fun rem(other: Int): Int = 0
     public actual operator fun rem(other: Long): Long = 0
-    
+
     public actual infix fun shl(bitCount: Int): Int = 0
     public actual infix fun shr(bitCount: Int): Int = 0
     public actual infix fun ushr(bitCount: Int): Int = 0
@@ -113,6 +121,7 @@ public actual class Long : Number(), Comparable<Long> {
         public actual const val MIN_VALUE: Long = 1L // Dummy value
         public actual const val MAX_VALUE: Long = 9223372036854775807L
     }
+
     public actual override fun toByte(): Byte = this.toByte()
     public actual override fun toShort(): Short = this.toShort()
     public actual override fun toInt(): Int = this.toInt()
@@ -153,6 +162,7 @@ public actual class Float : Number(), Comparable<Float> {
         public actual const val NEGATIVE_INFINITY: Float = 0.0F // Dummy value
         public actual const val NaN: Float = 0.0F // Dummy value
     }
+
     public actual override fun toByte(): Byte = this.toByte()
     public actual override fun toShort(): Short = this.toShort()
     public actual override fun toInt(): Int = this.toInt()
@@ -185,6 +195,7 @@ public actual class Double : Number(), Comparable<Double> {
         public actual const val NEGATIVE_INFINITY: Double = 0.0 // Dummy value
         public actual const val NaN: Double = 0.0 // Dummy value
     }
+
     public actual override fun toByte(): Byte = this.toByte()
     public actual override fun toShort(): Short = this.toShort()
     public actual override fun toInt(): Int = this.toInt()

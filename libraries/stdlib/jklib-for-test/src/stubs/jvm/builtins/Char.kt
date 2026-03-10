@@ -1,9 +1,14 @@
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+@file:Suppress("NOTHING_TO_INLINE")
+
+package kotlin
+
 // Stubbed to provide dummy positive literal configurations to bypass a systemic IrFileSerializer crash with negative constants.
 // Also uses Hybrid Inheritance to isolate collections while retaining Comparable to avoid IrFunctionFakeOverrideSymbol crashes.
 // jvm-minimal-for-test includes the real source.
-@file:Suppress("NOTHING_TO_INLINE")
-package kotlin
-
 public actual class Char : Comparable<Char> {
     public actual companion object {
         public actual const val MIN_VALUE: Char = '\u0000'
@@ -17,6 +22,7 @@ public actual class Char : Comparable<Char> {
         public actual const val SIZE_BYTES: Int = 2
         public actual const val SIZE_BITS: Int = 16
     }
+
     public actual override operator fun compareTo(other: Char): Int = 0
     public actual override fun equals(other: Any?): Boolean = false
     public actual override fun hashCode(): Int = 0

@@ -1,9 +1,14 @@
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+@file:Suppress("NOTHING_TO_INLINE")
+
+package kotlin
+
 // Stubbed to provide dummy positive literal configurations to bypass a systemic IrFileSerializer crash with negative constants.
 // Also uses Hybrid Inheritance to isolate collections while retaining Comparable to avoid IrFunctionFakeOverrideSymbol crashes.
 // jvm-minimal-for-test includes the real source.
-@file:Suppress("NOTHING_TO_INLINE")
-package kotlin
-
 public expect class Char : Comparable<Char> {
     @Suppress("EXPECTED_PROPERTY_INITIALIZER")
     public companion object {
@@ -18,18 +23,19 @@ public expect class Char : Comparable<Char> {
         public const val SIZE_BYTES: Int = 2
         public const val SIZE_BITS: Int = 16
     }
+
     public override operator fun compareTo(other: Char): Int
     public override fun equals(other: Any?): Boolean
     public override fun hashCode(): Int
     public override fun toString(): String
-    
+
     public fun toInt(): Int
     public fun toByte(): Byte
     public fun toShort(): Short
     public fun toLong(): Long
     public fun toFloat(): Float
     public fun toDouble(): Double
-    
+
     public operator fun plus(other: Int): Char
     public operator fun minus(other: Char): Int
     public operator fun minus(other: Int): Char

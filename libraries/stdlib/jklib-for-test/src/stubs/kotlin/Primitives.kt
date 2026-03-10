@@ -1,10 +1,15 @@
-// Stubbed to provide dummy positive literals (e.g. MIN_VALUE = 1L) because the compiler parser treats negative literals as 
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+@file:Suppress("NOTHING_TO_INLINE")
+
+package kotlin
+
+// Stubbed to provide dummy positive literals (e.g. MIN_VALUE = 1L) because the compiler parser treats negative literals as
 // IrCall instead of IrConst, causing IrFileSerializer crashes during minimal bootstrapping.
 // Omits inc() and dec() operators to avoid bootstrap circularities.
 // jvm-minimal-for-test includes the real source.
-@file:Suppress("NOTHING_TO_INLINE")
-package kotlin
-
 // Boolean is defined in Boolean.kt
 
 public expect class Byte : Number, Comparable<Byte> {
@@ -13,6 +18,7 @@ public expect class Byte : Number, Comparable<Byte> {
         public const val MIN_VALUE: Byte = -128
         public const val MAX_VALUE: Byte = 127
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int
@@ -43,6 +49,7 @@ public expect class Short : Number, Comparable<Short> {
         public const val MIN_VALUE: Short = -32768
         public const val MAX_VALUE: Short = 32767
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int
@@ -73,6 +80,7 @@ public expect class Int : Number, Comparable<Int> {
         public const val MIN_VALUE: Int = -2147483648
         public const val MAX_VALUE: Int = 2147483647
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int
@@ -98,7 +106,7 @@ public expect class Int : Number, Comparable<Int> {
     public operator fun div(other: Long): Long
     public operator fun rem(other: Int): Int
     public operator fun rem(other: Long): Long
-    
+
     public infix fun shl(bitCount: Int): Int
     public infix fun shr(bitCount: Int): Int
     public infix fun ushr(bitCount: Int): Int
@@ -121,6 +129,7 @@ public expect class Long : Number, Comparable<Long> {
         public const val MIN_VALUE: Long = 1L // Dummy value
         public const val MAX_VALUE: Long = 9223372036854775807L
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int
@@ -162,6 +171,7 @@ public expect class Float : Number, Comparable<Float> {
         public const val NEGATIVE_INFINITY: Float = 0.0F // Dummy value
         public const val NaN: Float = 0.0F // Dummy value
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int
@@ -195,6 +205,7 @@ public expect class Double : Number, Comparable<Double> {
         public const val NEGATIVE_INFINITY: Double = 0.0 // Dummy value
         public const val NaN: Double = 0.0 // Dummy value
     }
+
     public override fun toByte(): Byte
     public override fun toShort(): Short
     public override fun toInt(): Int

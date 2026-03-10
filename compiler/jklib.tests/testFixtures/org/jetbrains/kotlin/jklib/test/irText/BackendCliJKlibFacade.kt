@@ -1,30 +1,29 @@
+/*
+ * Copyright 2010-2026 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.jklib.test.irText
 
-import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibExitArtifact
+import org.jetbrains.kotlin.cli.common.diagnosticsCollector
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibFir2IrPipelineArtifact
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibKlibSerializationPhase
-import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.cli.pipeline.PipelineContext
+import org.jetbrains.kotlin.config.phaser.PhaseConfig
+import org.jetbrains.kotlin.config.phaser.invokeToplevel
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
 import org.jetbrains.kotlin.test.frontend.fir.Fir2IrCliBasedOutputArtifact
+import org.jetbrains.kotlin.test.model.ArtifactKinds
 import org.jetbrains.kotlin.test.model.BackendFacade
 import org.jetbrains.kotlin.test.model.BackendKinds
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.services.TestServices
-
-import org.jetbrains.kotlin.test.model.ArtifactKinds
-import org.jetbrains.kotlin.config.phaser.PhaseConfig
-import org.jetbrains.kotlin.config.phaser.invokeToplevel
-import org.jetbrains.kotlin.cli.pipeline.PipelineContext
-import java.io.File
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.util.PerformanceManager
-import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
+import java.io.File
 
-import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.cli.common.diagnosticsCollector
-
-class BackendCliJKlibFacade(testServices: TestServices) : BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
+class BackendCliJKlibFacade(testServices: TestServices) :
+    BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
     override fun transform(module: org.jetbrains.kotlin.test.model.TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
         // We accept IrBackendInput, but we expect it to be from our pipeline
         if (inputArtifact !is Fir2IrCliBasedOutputArtifact<*>) {
@@ -35,8 +34,8 @@ class BackendCliJKlibFacade(testServices: TestServices) : BackendFacade<IrBacken
 
         val phaseConfig = PhaseConfig()
         val context = PipelineContext(
-             object : PerformanceManager(JvmPlatforms.defaultJvmPlatform, "Test") {},
-             kaptMode = false
+            object : PerformanceManager(JvmPlatforms.defaultJvmPlatform, "Test") {},
+            kaptMode = false
         )
 
         JKlibKlibSerializationPhase.invokeToplevel(phaseConfig, context, cliArtifact)

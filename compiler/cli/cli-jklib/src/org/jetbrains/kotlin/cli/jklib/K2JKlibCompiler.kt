@@ -26,16 +26,16 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.EXCEPTIO
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageUtil
 import org.jetbrains.kotlin.cli.common.messages.OutputMessageUtil
-import org.jetbrains.kotlin.cli.common.messages.getLogger
 import org.jetbrains.kotlin.cli.common.modules.ModuleBuilder
+import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibCliPipeline
 import org.jetbrains.kotlin.cli.jvm.compiler.*
+import org.jetbrains.kotlin.cli.jvm.compiler.AllJavaSourcesInProjectScope
 import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.convertToIrAndActualizeForJvm
 import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.createProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.config.*
-import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
-import org.jetbrains.kotlin.cli.jvm.compiler.AllJavaSourcesInProjectScope
 import org.jetbrains.kotlin.cli.jvm.configureJdkHomeFromSystemProperty
 import org.jetbrains.kotlin.codegen.CompilationException
+import org.jetbrains.kotlin.compiler.plugin.getCompilerExtensions
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.config.CommonConfigurationKeys.MODULE_NAME
 import org.jetbrains.kotlin.config.JvmClosureGenerationScheme
@@ -45,7 +45,7 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.CompositePackageFragmentProvider
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
-
+import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
 import org.jetbrains.kotlin.diagnostics.impl.deduplicating
 import org.jetbrains.kotlin.fir.DependencyListForCliModule
 import org.jetbrains.kotlin.fir.backend.jvm.JvmFir2IrExtensions
@@ -59,10 +59,7 @@ import org.jetbrains.kotlin.ir.*
 import org.jetbrains.kotlin.ir.backend.jklib.JKlibDescriptorMangler
 import org.jetbrains.kotlin.ir.backend.jklib.JKlibIrLinker
 import org.jetbrains.kotlin.ir.backend.jklib.JKlibModuleSerializer
-import org.jetbrains.kotlin.util.PerformanceManager
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibCliPipeline
-import org.jetbrains.kotlin.cli.common.messages.GroupingMessageCollector
 import org.jetbrains.kotlin.ir.declarations.impl.IrFactoryImpl
 import org.jetbrains.kotlin.ir.descriptors.IrDescriptorBasedFunctionFactory
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
@@ -70,14 +67,13 @@ import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.library.*
 import org.jetbrains.kotlin.library.impl.BuiltInsPlatform
-import org.jetbrains.kotlin.compiler.plugin.getCompilerExtensions
 import org.jetbrains.kotlin.library.loader.KlibLoader
 import org.jetbrains.kotlin.library.loader.reportLoadingProblemsIfAny
 import org.jetbrains.kotlin.library.metadata.KlibMetadataFactories
+import org.jetbrains.kotlin.library.metadata.resolver.impl.KotlinResolvedLibraryImpl
 import org.jetbrains.kotlin.library.writer.KlibWriter
 import org.jetbrains.kotlin.library.writer.includeIr
 import org.jetbrains.kotlin.library.writer.includeMetadata
-import org.jetbrains.kotlin.library.metadata.resolver.impl.KotlinResolvedLibraryImpl
 import org.jetbrains.kotlin.load.java.lazy.ModuleClassResolver
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.VirtualFileBoundJavaClass
@@ -97,6 +93,7 @@ import org.jetbrains.kotlin.resolve.jvm.JavaDescriptorResolver
 import org.jetbrains.kotlin.resolve.jvm.multiplatform.OptionalAnnotationPackageFragmentProvider
 import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactory
 import org.jetbrains.kotlin.storage.StorageManager
+import org.jetbrains.kotlin.util.PerformanceManager
 import org.jetbrains.kotlin.util.klibMetadataVersionOrDefault
 import org.jetbrains.kotlin.utils.KotlinPaths
 import org.jetbrains.kotlin.utils.PathUtil
@@ -157,7 +154,7 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
         arguments: K2JKlibCompilerArguments,
         rootDisposable: Disposable,
         paths: KotlinPaths?,
-        destination: File
+        destination: File,
     ): ExitCode {
         val performanceManager = configuration.perfManager
         val pipeline = JKlibCliPipeline(performanceManager ?: object : PerformanceManager(JvmPlatforms.defaultJvmPlatform, "JKlib") {})
@@ -185,7 +182,6 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
         // source module
         val scope = AllJavaSourcesInProjectScope(projectContext.project)
         val dependencyScope = GlobalSearchScope.notScope(scope)
-
 
 
         val moduleClassResolver = SourceOrBinaryModuleClassResolver(scope)
@@ -452,13 +448,13 @@ class K2JKlibCompiler : CLICompiler<K2JKlibCompilerArguments>() {
             arguments.samConversions?.let {
                 val parsedValue = JvmClosureGenerationScheme.fromString(it)
                 if (parsedValue != null) {
-                put(JVMConfigurationKeys.SAM_CONVERSIONS, parsedValue)
+                    put(JVMConfigurationKeys.SAM_CONVERSIONS, parsedValue)
                 } else {
-                messageCollector.report(
-                    ERROR,
-                    "Unknown `-Xsam-conversions` argument: ${it}\n." +
-                    "Supported arguments: ${JvmClosureGenerationScheme.entries.joinToString { it.description }}",
-                )
+                    messageCollector.report(
+                        ERROR,
+                        "Unknown `-Xsam-conversions` argument: ${it}\n." +
+                                "Supported arguments: ${JvmClosureGenerationScheme.entries.joinToString { it.description }}",
+                    )
                 }
             }
         }

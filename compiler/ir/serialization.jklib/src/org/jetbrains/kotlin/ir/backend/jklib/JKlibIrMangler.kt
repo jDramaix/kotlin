@@ -17,9 +17,7 @@ import org.jetbrains.kotlin.descriptors.annotations.CompositeAnnotations
 import org.jetbrains.kotlin.idea.MainFunctionDetector
 import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.backend.jvm.serialization.BaseJvmIrMangler
-import org.jetbrains.kotlin.ir.backend.jvm.serialization.BaseJvmIrMangler.JvmIrManglerComputer
 import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmDescriptorMangler
-import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmDescriptorMangler.JvmDescriptorManglerComputer
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.IrType
@@ -40,7 +38,10 @@ import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.SimpleType
 import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.model.*
+import org.jetbrains.kotlin.types.model.TypeArgumentMarker
+import org.jetbrains.kotlin.types.model.TypeParameterMarker
+import org.jetbrains.kotlin.types.model.TypeSystemContext
+import org.jetbrains.kotlin.types.model.TypeVariance
 import org.jetbrains.kotlin.types.typeUtil.replaceAnnotations
 
 /*
@@ -90,6 +91,7 @@ class JKlibIrMangler : BaseJvmIrMangler() {
             }
         }
     }
+
     override fun getMangleComputer(mode: MangleMode, compatibleMode: Boolean): KotlinMangleComputer<IrDeclaration> =
         JKlibIrManglerComputer(StringBuilder(256), mode, compatibleMode)
 }

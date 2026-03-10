@@ -20,7 +20,7 @@ data class JKlibFrontendPipelineArtifact(
     override val configuration: CompilerConfiguration,
     val sourceFiles: List<KtSourceFile>,
     val projectEnvironment: VfsBasedProjectEnvironment,
-    val rootDisposable: Disposable
+    val rootDisposable: Disposable,
 ) : FrontendPipelineArtifact() {
 
     override fun withNewFrontendOutputImpl(newFrontendOutput: AllModulesFrontendOutput): FrontendPipelineArtifact {

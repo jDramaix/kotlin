@@ -1,13 +1,13 @@
 /*
- * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
+package kotlin.enums
 
-// Stubbed using a delegation-based approach (wrapping an Array) to bypass dependencies on internal JVM 
-// serialization classes (like throwReadObjectNotSupported) and AbstractList, which would otherwise trigger 
+// Stubbed using a delegation-based approach (wrapping an Array) to bypass dependencies on internal JVM
+// serialization classes (like throwReadObjectNotSupported) and AbstractList, which would otherwise trigger
 // large transitive dependency chains and IrFunctionFakeOverrideSymbol crashes.
 // jvm-minimal-for-test omits this entirely.
-package kotlin.enums
 
 @SinceKotlin("1.9")
 @WasExperimental(ExperimentalStdlibApi::class)
@@ -27,11 +27,11 @@ internal fun <E : Enum<E>> enumEntries(entries: Array<E>): EnumEntries<E> = Enum
 
 @SinceKotlin("1.8")
 private class EnumEntriesList<T : Enum<T>>(private val entries: Array<T>) : EnumEntries<T> {
-    
+
     // Mimic List API manually
     val size: Int get() = entries.size
     operator fun get(index: Int): T = entries[index]
-    
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is EnumEntriesList<*>) return false

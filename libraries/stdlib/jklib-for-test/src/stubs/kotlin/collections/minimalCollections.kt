@@ -1,7 +1,12 @@
-// Stubbed to provide minimal dummy implementations for collection functions (like listOf() and joinToString()) 
-// required by primitive tests. The real collections are excluded entirely to isolate the primitive world 
-// and bypass IrFunctionFakeOverrideSymbol crashes.
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
 package kotlin.collections
+
+// Stubbed to provide minimal dummy implementations for collection functions (like listOf() and joinToString())
+// required by primitive tests. The real collections are excluded entirely to isolate the primitive world
+// and bypass IrFunctionFakeOverrideSymbol crashes.
 
 public interface Iterable<out T> {
     public operator fun iterator(): Iterator<T>
@@ -16,6 +21,7 @@ public interface Collection<out E> : Iterable<E> {
     public fun isEmpty(): Boolean
     public operator fun contains(element: @UnsafeVariance E): Boolean
     public fun containsAll(elements: Collection<@UnsafeVariance E>): Boolean
+
     // iterator() is inherited from Iterable, but we might need to match signature if different?
     // standard Collections.kt defines overrides.
     public override operator fun iterator(): Iterator<E>
@@ -115,5 +121,5 @@ public fun <T> Iterable<T>.joinToString(
     postfix: CharSequence = "",
     limit: Int = -1,
     truncated: CharSequence = "...",
-    transform: ((T) -> CharSequence)? = null
+    transform: ((T) -> CharSequence)? = null,
 ): String = "stub"

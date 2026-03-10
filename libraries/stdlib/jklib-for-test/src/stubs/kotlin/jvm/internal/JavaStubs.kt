@@ -1,6 +1,7 @@
-// Stubbed to provide essential reflection and CallableReference runtime bridges required by the compiler backend, 
-// avoiding the need to include the full kotlin.reflect layer. 
-// jvm-minimal-for-test handles this implicitly through its broader classpath.
+/*
+ * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
 package kotlin.jvm.internal
 
 import kotlin.reflect.KClass
@@ -13,6 +14,9 @@ import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty2
 import kotlin.reflect.KMutableProperty2
 
+// Stubbed to provide essential reflection and CallableReference runtime bridges required by the compiler backend,
+// avoiding the need to include the full kotlin.reflect layer.
+// jvm-minimal-for-test handles this implicitly through its broader classpath.
 
 open class PropertyReference0 : CallableReference() {
     open fun get(): Any? = null
@@ -44,7 +48,7 @@ object Reflection {
 
     fun renderLambdaToString(lambda: Lambda<*>): String = "Stub"
     fun renderLambdaToString(function: FunctionBase<*>): String = "Stub"
-    
+
     // fun function(f: FunctionReference): KFunction<*> = TODO() 
     fun property0(p: PropertyReference0): KProperty0<*> = TODO()
     fun mutableProperty0(p: MutablePropertyReference0): KMutableProperty0<*> = TODO()

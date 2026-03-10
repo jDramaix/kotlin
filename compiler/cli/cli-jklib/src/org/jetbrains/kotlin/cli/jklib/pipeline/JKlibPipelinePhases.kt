@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors.
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
@@ -88,7 +87,9 @@ val JKLIB_OUTPUT_DESTINATION = CompilerConfigurationKey.create<String>("jklib ou
 
 var CompilerConfiguration.jklibOutputDestination: String?
     get() = get(JKLIB_OUTPUT_DESTINATION)
-    set(value) { putIfNotNull(JKLIB_OUTPUT_DESTINATION, value) }
+    set(value) {
+        putIfNotNull(JKLIB_OUTPUT_DESTINATION, value)
+    }
 
 object JKlibConfigurationPhase : AbstractConfigurationPhase<K2JKlibCompilerArguments>(
     name = "JKlibConfigurationPhase",
@@ -103,7 +104,7 @@ object JKlibConfigurationPhase : AbstractConfigurationPhase<K2JKlibCompilerArgum
 object JKlibConfigurationUpdater : ConfigurationUpdater<K2JKlibCompilerArguments>() {
     override fun fillConfiguration(
         input: ArgumentsPipelineArtifact<K2JKlibCompilerArguments>,
-        configuration: CompilerConfiguration
+        configuration: CompilerConfiguration,
     ) {
         val arguments = input.arguments
         val paths = PathUtil.kotlinPathsForCompiler
@@ -278,12 +279,12 @@ object JKlibFir2IrPipelinePhase : PipelinePhase<JKlibFrontendPipelineArtifact, J
     name = "JKlibFir2IrPipelinePhase",
     postActions = setOf(CheckCompilationErrors.CheckDiagnosticCollector)
 ) {
-    override fun executePhase(input: JKlibFrontendPipelineArtifact): JKlibFir2IrPipelineArtifact? {
+    override fun executePhase(input: JKlibFrontendPipelineArtifact): JKlibFir2IrPipelineArtifact {
         val configuration = input.configuration
         val firResult = input.frontendOutput
         val diagnosticsReporter = configuration.diagnosticsCollector
-        val projectEnvironment = input.projectEnvironment
-        val rootDisposable = input.rootDisposable
+        input.projectEnvironment
+        input.rootDisposable
 
         val fir2IrExtensions = JvmFir2IrExtensions(configuration)
         val irGenerationExtensions = configuration.getCompilerExtensions(IrGenerationExtension)
@@ -303,7 +304,7 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
     name = "JKlibKlibSerializationPhase",
     postActions = setOf(CheckCompilationErrors.CheckDiagnosticCollector)
 ) {
-    override fun executePhase(input: JKlibFir2IrPipelineArtifact): JKlibExitArtifact? {
+    override fun executePhase(input: JKlibFir2IrPipelineArtifact): JKlibExitArtifact {
         val fir2IrResult = input.result
         val configuration = input.configuration
         val diagnosticsReporter = configuration.diagnosticsCollector
@@ -353,7 +354,8 @@ object JKlibKlibSerializationPhase : PipelinePhase<JKlibFir2IrPipelineArtifact, 
     }
 }
 
-class JKlibExitArtifact(override val exitCode: ExitCode, override val configuration: CompilerConfiguration) : PipelineArtifactWithExitCode() {
+class JKlibExitArtifact(override val exitCode: ExitCode, override val configuration: CompilerConfiguration) :
+    PipelineArtifactWithExitCode() {
     @CliPipelineInternals(OPT_IN_MESSAGE)
     override fun withCompilerConfiguration(newConfiguration: CompilerConfiguration): PipelineArtifact {
         return JKlibExitArtifact(exitCode, newConfiguration)
