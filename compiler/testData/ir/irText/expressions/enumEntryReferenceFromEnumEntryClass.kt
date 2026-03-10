@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 enum class MyEnum {
     Z {
         var counter = 0

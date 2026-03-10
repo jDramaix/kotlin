@@ -1,5 +1,4 @@
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 import kotlin.annotation.AnnotationTarget.*
 
 annotation class NoTarget

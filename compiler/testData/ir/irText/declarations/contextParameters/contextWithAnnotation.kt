@@ -1,5 +1,4 @@
 // IGNORE_BACKEND_K1: ANY
-// IGNORE_BACKEND: JKLIB
 // LANGUAGE: +ContextParameters
 import kotlin.annotation.AnnotationTarget.*
 

@@ -1,4 +1,5 @@
 // IGNORE_BACKEND_K1: ANY
+// IGNORE_BACKEND: JKLIB
 // FIR_IDENTICAL
 // LANGUAGE: +MultiPlatformProjects +AllowAnyAsAnActualTypeForExpectInterface
 

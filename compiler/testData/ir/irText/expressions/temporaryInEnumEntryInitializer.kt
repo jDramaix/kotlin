@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 val n: Any? = null
 
 enum class En(val x: String?) {

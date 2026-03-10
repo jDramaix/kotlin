@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 fun foo(): IntArray = intArrayOf(1, 2, 3)
 fun bar() = 42
 

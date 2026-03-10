@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 enum class A { V1 }
 
 fun testVariableAssignment_throws(a: A) {

@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 object A
 
 enum class En { X }

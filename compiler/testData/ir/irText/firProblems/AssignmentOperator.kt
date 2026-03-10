@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 package foo
 
 class A {

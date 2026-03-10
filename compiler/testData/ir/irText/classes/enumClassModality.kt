@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 enum class TestFinalEnum1 {
     X1
 }

@@ -1,5 +1,4 @@
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 // LANGUAGE: +ClassTypeParameterAnnotations
 
 @Target(AnnotationTarget.TYPE)

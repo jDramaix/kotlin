@@ -1,5 +1,4 @@
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 // LANGUAGE: +AllowAssigningArrayElementsToVarargsInNamedFormForFunctions
 fun foo(vararg s: String) {}
 

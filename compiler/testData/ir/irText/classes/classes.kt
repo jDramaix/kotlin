@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 // FIR_IDENTICAL
 class TestClass
 

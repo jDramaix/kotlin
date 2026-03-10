@@ -1,7 +1,6 @@
 // LANGUAGE: +DefinitelyNonNullableTypes -ProhibitIntersectionReifiedTypeParameter
 // SKIP_KT_DUMP
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 
 class In<in I>
 

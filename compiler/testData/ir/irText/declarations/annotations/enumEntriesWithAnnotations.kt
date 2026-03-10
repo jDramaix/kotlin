@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 annotation class TestAnn(val x: String)
 
 enum class TestEnum {

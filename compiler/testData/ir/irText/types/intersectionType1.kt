@@ -1,6 +1,5 @@
 // LANGUAGE: -ProhibitIntersectionReifiedTypeParameter
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 class In<in I>
 
 fun <S> select(x: S, y: S): S = x

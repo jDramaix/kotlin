@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JKLIB
 var p: Int = 0
 val arr = intArrayOf(1, 2, 3)
 

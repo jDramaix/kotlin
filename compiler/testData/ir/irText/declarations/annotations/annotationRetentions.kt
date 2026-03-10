@@ -1,5 +1,4 @@
 // FIR_IDENTICAL
-// IGNORE_BACKEND: JKLIB
 // ISSUE: KT-69965
 
 import kotlin.annotation.AnnotationRetention.*
