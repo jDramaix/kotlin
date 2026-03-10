@@ -15,13 +15,6 @@ class K2JKlibCompilerArguments : CommonCompilerArguments() {
             field = if (value.isNullOrEmpty()) null else value
         }
 
-    @Argument(value = "-p", valueDescription = "<library|ir>", description = "")
-    var produce: String? = null
-        set(value) {
-            checkFrozen()
-            field = if (value.isNullOrEmpty()) null else value
-        }
-
     @Argument(
         value = "-classpath",
         shortName = "-cp",

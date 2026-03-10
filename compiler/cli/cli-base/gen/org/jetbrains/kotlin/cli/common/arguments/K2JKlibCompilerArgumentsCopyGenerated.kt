@@ -27,7 +27,7 @@ fun copyK2JKlibCompilerArguments(from: K2JKlibCompilerArguments, to: K2JKlibComp
     to.noStdlib = from.noStdlib
     to.nullabilityAnnotations = from.nullabilityAnnotations?.copyOf()
     to.outputBuiltinsMetadata = from.outputBuiltinsMetadata
-    to.produce = from.produce
+    to.samConversions = from.samConversions
     to.supportCompatqualCheckerFrameworkAnnotations = from.supportCompatqualCheckerFrameworkAnnotations
     to.typeEnhancementImprovementsInStrictMode = from.typeEnhancementImprovementsInStrictMode
     to.valueClasses = from.valueClasses
