@@ -5,26 +5,109 @@
 
 package org.jetbrains.kotlin.jklib.test.irText
 
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.FirParser
-import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
-import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.configuration.additionalK2ConfigurationForIrTextTest
-import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
-import org.jetbrains.kotlin.test.model.*
+import org.jetbrains.kotlin.test.model.FrontendKinds
 
-abstract class AbstractFirJKlibIrTextTest(
-    val parser: FirParser = FirParser.Psi,
-) : AbstractJKlibIrTextTestBase<FirOutputArtifact>(FrontendKinds.FIR) {
-    override val frontendFacade: Constructor<FrontendFacade<FirOutputArtifact>>
+import org.jetbrains.kotlin.test.TargetBackend
+import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
+import org.jetbrains.kotlin.test.backend.handlers.NoFirCompilationErrorsHandler
+import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
+import org.jetbrains.kotlin.test.builders.*
+import org.jetbrains.kotlin.test.configuration.setupDefaultDirectivesForIrTextTest
+import org.jetbrains.kotlin.test.configuration.setupIrTextDumpHandlers
+import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
+import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.model.*
+import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
+import org.jetbrains.kotlin.test.services.PhasedPipelineChecker
+import org.jetbrains.kotlin.test.services.TestPhase
+import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
+import org.jetbrains.kotlin.test.services.fir.FirSpecificParserSuppressor
+import org.jetbrains.kotlin.test.services.moduleStructure
+import org.jetbrains.kotlin.test.services.sourceProviders.AdditionalDiagnosticsSourceFilesProvider
+import org.jetbrains.kotlin.test.services.sourceProviders.CoroutineHelpersSourceFilesProvider
+import org.jetbrains.kotlin.utils.bind
+
+
+import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
+
+abstract class AbstractFirJKlibIrTextTest : AbstractKotlinCompilerWithTargetBackendTest(TargetBackend.JKLIB) {
+    val frontendFacade: Constructor<FrontendFacade<FirOutputArtifact>>
         get() = ::FirCliJKlibFacade
-    override val frontendToBackendConverter: Constructor<Frontend2BackendConverter<FirOutputArtifact, IrBackendInput>>
+    val frontendToBackendConverter: Constructor<Frontend2BackendConverter<FirOutputArtifact, IrBackendInput>>
         get() = ::Fir2IrCliJKlibFacade
-    override val backendFacade: Constructor<BackendFacade<IrBackendInput, BinaryArtifacts.KLib>>
+    val backendFacade: Constructor<BackendFacade<IrBackendInput, BinaryArtifacts.KLib>>
         get() = ::BackendCliJKlibFacade
 
-    override fun configure(builder: TestConfigurationBuilder) {
-        super.configure(builder)
-        builder.additionalK2ConfigurationForIrTextTest(parser)
+    override fun configure(builder: TestConfigurationBuilder) = with(builder) {
+        globalDefaults {
+            frontend = FrontendKinds.FIR
+            targetBackend = TargetBackend.JKLIB
+            targetPlatform = JvmPlatforms.defaultJvmPlatform
+            artifactKind = ArtifactKinds.KLib
+            dependencyKind = DependencyKind.Binary
+        }
+
+        useConfigurators(
+            ::CommonEnvironmentConfigurator,
+            ::JKlibSourceRootConfigurator,
+            ::JKlibJavaSourceConfigurator,
+        )
+
+        useAdditionalSourceProviders(
+            ::AdditionalDiagnosticsSourceFilesProvider,
+            ::CoroutineHelpersSourceFilesProvider,
+        )
+
+        useMetaTestConfigurators(::FirSpecificParserSuppressor, ::WithStdlibSkipper, ::WithReflectSkipper)
+
+        facadeStep(frontendFacade)
+        firHandlersStep {
+            useHandlers(::NoFirCompilationErrorsHandler)
+        }
+
+        facadeStep(frontendToBackendConverter)
+        irHandlersStep()
+
+        facadeStep(backendFacade)
+        klibArtifactsHandlersStep()
+
+        setupDefaultDirectivesForIrTextTest()
+        defaultDirectives {
+            +CodegenTestDirectives.IGNORE_IR_EXPECT_FLAG
+        }
+        configureIrHandlersStep {
+            setupIrTextDumpHandlers()
+        }
+
+        useAfterAnalysisCheckers(
+            ::BlackBoxCodegenSuppressor,
+            ::PhasedPipelineChecker.bind(TestPhase.BACKEND)
+        )
+        enableMetaInfoHandler()
+        additionalK2ConfigurationForIrTextTest(FirParser.LightTree)
+    }
+}
+
+class WithStdlibSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) :
+    org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+    override val directiveContainers: List<org.jetbrains.kotlin.test.directives.model.DirectivesContainer>
+        get() = listOf(org.jetbrains.kotlin.test.directives.ConfigurationDirectives)
+
+    override fun shouldSkipTest(): Boolean {
+        return testServices.moduleStructure.allDirectives.contains(org.jetbrains.kotlin.test.directives.ConfigurationDirectives.WITH_STDLIB)
+    }
+}
+
+class WithReflectSkipper(testServices: org.jetbrains.kotlin.test.services.TestServices) :
+    org.jetbrains.kotlin.test.services.MetaTestConfigurator(testServices) {
+    override val directiveContainers: List<org.jetbrains.kotlin.test.directives.model.DirectivesContainer>
+        get() = listOf(JvmEnvironmentConfigurationDirectives)
+
+    override fun shouldSkipTest(): Boolean {
+        return testServices.moduleStructure.allDirectives.contains(JvmEnvironmentConfigurationDirectives.WITH_REFLECT)
     }
 }

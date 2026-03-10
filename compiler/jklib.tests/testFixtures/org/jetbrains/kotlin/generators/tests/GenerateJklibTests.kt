@@ -7,7 +7,6 @@ package org.jetbrains.kotlin.generators.tests
 
 import org.jetbrains.kotlin.generators.dsl.junit5.generateTestGroupSuiteWithJUnit5
 import org.jetbrains.kotlin.jklib.test.irText.AbstractFirJKlibIrTextTest
-import org.jetbrains.kotlin.jklib.test.irText.AbstractFirLightTreeJKlibIrTextTest
 
 fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
@@ -16,9 +15,6 @@ fun main(args: Array<String>) {
 
     generateTestGroupSuiteWithJUnit5(args, mainClassName) {
         testGroup(testsRoot, "compiler/testData") {
-            testClass<AbstractFirLightTreeJKlibIrTextTest> {
-                model("ir/irText", excludeDirs = listOf("declarations/multiplatform/k1"))
-            }
             testClass<AbstractFirJKlibIrTextTest> {
                 model("ir/irText", excludeDirs = listOf("declarations/multiplatform/k1"))
             }
