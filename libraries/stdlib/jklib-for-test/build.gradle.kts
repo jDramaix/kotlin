@@ -51,9 +51,7 @@ val copyMinimalSources by tasks.registering(Sync::class) {
             //"kotlin/Collections.kt",
             "kotlin/Comparable.kt",
             "kotlin/Enum.kt",
-            "kotlin/Enum.kt",
             //"kotlin/enums/EnumEntries.kt", // Used via stub in src/stubs/kotlin/enums/EnumEntries.kt
-            "kotlin/Function.kt",
             "kotlin/Function.kt",
             "kotlin/Iterator.kt",
             "kotlin/Library.kt",
@@ -121,46 +119,6 @@ val copyMinimalSources by tasks.registering(Sync::class) {
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-// Helper to separate Java compilation
-fun createJavaCompilationTask(sourceTask: TaskProvider<Sync>): TaskProvider<Jar> {
-    val variantName = sourceTask.name.replaceFirstChar { it.uppercase() }
-    val javaCompileName = "compileJava${variantName}"
-    val jarName = "jarJava${variantName}"
-
-    // Use 'project' to ensure we are targeting the project's task container
-    // strictly speaking 'tasks.register' at script level targets the project's tasks
-    val javaCompileTask = tasks.register(javaCompileName, JavaCompile::class) {
-        dependsOn(sourceTask)
-        source = fileTree(sourceTask.map { it.destinationDir }) {
-            include("**/*.java")
-        }
-        destinationDirectory.set(layout.buildDirectory.dir("classes/java/$variantName"))
-        // Resolve dependencies for Java compilation
-        val runtimeClasspath = project.configurations.getByName("runtimeClasspath")
-        // We add the full runtime classpath to satisfy dependencies like kotlin-reflect and annotations     
-        classpath = runtimeClasspath
-        
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
-        options.compilerArgs.add("-Xlint:-options")
-        options.compilerArgs.add("-Xlint:-deprecation")
-        options.compilerArgs.add("-Xlint:none")
-        options.compilerArgs.add("-nowarn")
-
-        // Remove -Werror if present to allow build to pass with warnings
-        options.compilerArgs.remove("-Werror")
-        options.compilerArgs.remove("-Xwerror") 
-        options.isDeprecation = false
-        options.isWarnings = false
-    }
-
-    return tasks.register(jarName, Jar::class) {
-        from(javaCompileTask.map { it.destinationDirectory })
-        archiveFileName.set("kotlin-stdlib-java-$variantName.jar")
-        destinationDirectory.set(layout.buildDirectory.dir("libs"))
-    }
 }
 
 fun JavaExec.configureJklibCompilation(
