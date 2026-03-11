@@ -206,8 +206,6 @@ class JKlibIrLinker(
             deserializedFilesInKlibOrder[moduleFragment] = fileDeserializationStates.memoryOptimizedMap { it.file }
         }
 
-        private val descriptorSignatures = mutableMapOf<DeclarationDescriptor, IdSignature>()
-
         private val descriptorByIdSignatureFinder = DescriptorByIdSignatureFinderImpl(
             moduleDescriptor,
             mangler,
@@ -227,8 +225,9 @@ class JKlibIrLinker(
                 return@withKotlinBuiltinsHack it
             }
             val descriptor = descriptorByIdSignatureFinder.findDescriptorBySignature(idSig) ?: return@withKotlinBuiltinsHack null
-            descriptorSignatures[descriptor] = idSig
-            return@withKotlinBuiltinsHack (stubGenerator.generateMemberStub(descriptor) as IrSymbolOwner).symbol
+            val symbol = (stubGenerator.generateMemberStub(descriptor) as IrSymbolOwner).symbol
+            deserializedSymbols[idSig] = symbol
+            return@withKotlinBuiltinsHack symbol
         }
     }
 
