@@ -39,8 +39,8 @@ abstract class AbstractFirJKlibIrTextTest : AbstractKotlinCompilerWithTargetBack
         get() = ::FirCliJKlibFacade
     val frontendToBackendConverter: Constructor<Frontend2BackendConverter<FirOutputArtifact, IrBackendInput>>
         get() = ::Fir2IrCliJKlibFacade
-    val backendFacade: Constructor<BackendFacade<IrBackendInput, BinaryArtifacts.KLib>>
-        get() = ::BackendCliJKlibFacade
+    val serializationFacade: Constructor<BackendFacade<IrBackendInput, BinaryArtifacts.KLib>>
+        get() = ::SerializationCliJKlibFacade
 
     override fun configure(builder: TestConfigurationBuilder) = with(builder) {
         globalDefaults {
@@ -72,7 +72,7 @@ abstract class AbstractFirJKlibIrTextTest : AbstractKotlinCompilerWithTargetBack
         facadeStep(frontendToBackendConverter)
         irHandlersStep()
 
-        facadeStep(backendFacade)
+        facadeStep(serializationFacade)
         klibArtifactsHandlersStep()
 
         setupDefaultDirectivesForIrTextTest()

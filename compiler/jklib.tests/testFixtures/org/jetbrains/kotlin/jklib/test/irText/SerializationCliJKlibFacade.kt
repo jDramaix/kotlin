@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.util.PerformanceManager
 import org.jetbrains.kotlin.test.model.TestModule
 import java.io.File
 
-class BackendCliJKlibFacade(testServices: TestServices) :
+class SerializationCliJKlibFacade(testServices: TestServices) :
     BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
     override fun transform(module: TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
         if (inputArtifact !is Fir2IrCliBasedOutputArtifact<*>) {
