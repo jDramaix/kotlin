@@ -98,6 +98,14 @@ class JKlibIrLinker(
         return (JavaToKotlinClassMap.mapJavaToKotlin(this) ?: JavaToKotlinClassMap.mapKotlinToJava(toUnsafe())) != null
     }
 
+    /**
+     * A hack to resolve methods of Java-to-Kotlin mapped types (e.g., kotlin.Throwable vs java.lang.Throwable).
+     * This addresses issues where the Kotlin 1.x (K1) frontend fails to resolve a Java method when the type
+     * is represented as its Kotlin mapped equivalent.
+     *
+     * In particular, it was introduced to resolve methods like `getSuppressed` that are present in Java's
+     * `java.lang.Throwable` but don't map directly/trivially to Kotlin's `kotlin.Throwable` during early linkage.
+     */
     private fun withKotlinBuiltinsHack(idSig: IdSignature, f: () -> IrSymbol?): IrSymbol? {
         val symbol = f()
         if (idSig is IdSignature.CommonSignature) {
