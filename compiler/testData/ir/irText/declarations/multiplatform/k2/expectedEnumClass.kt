@@ -1,6 +1,5 @@
 // IGNORE_BACKEND_K1: ANY
 // ^^^ K1 as well as K1-based test infra do not support "fragment refinement".
-// IGNORE_BACKEND: JKLIB
 
 // FIR_IDENTICAL
 // LANGUAGE: +MultiPlatformProjects
