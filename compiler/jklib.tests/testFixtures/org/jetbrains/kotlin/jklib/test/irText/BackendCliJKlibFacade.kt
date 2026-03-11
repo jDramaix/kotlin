@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.jklib.test.irText
 import org.jetbrains.kotlin.cli.common.diagnosticsCollector
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibFir2IrPipelineArtifact
 import org.jetbrains.kotlin.cli.jklib.pipeline.JKlibKlibSerializationPhase
+import org.jetbrains.kotlin.cli.jklib.pipeline.jklibOutputDestination
 import org.jetbrains.kotlin.cli.pipeline.PipelineContext
 import org.jetbrains.kotlin.config.phaser.PhaseConfig
 import org.jetbrains.kotlin.config.phaser.invokeToplevel
@@ -19,18 +20,23 @@ import org.jetbrains.kotlin.test.model.BackendFacade
 import org.jetbrains.kotlin.test.model.BackendKinds
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.services.TestServices
+import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
 import org.jetbrains.kotlin.util.PerformanceManager
+import org.jetbrains.kotlin.test.model.TestModule
 import java.io.File
 
 class BackendCliJKlibFacade(testServices: TestServices) :
     BackendFacade<IrBackendInput, BinaryArtifacts.KLib>(testServices, BackendKinds.IrBackend, ArtifactKinds.KLib) {
-    override fun transform(module: org.jetbrains.kotlin.test.model.TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
-        // We accept IrBackendInput, but we expect it to be from our pipeline
+    override fun transform(module: TestModule, inputArtifact: IrBackendInput): BinaryArtifacts.KLib? {
         if (inputArtifact !is Fir2IrCliBasedOutputArtifact<*>) {
-            return null // Skip gracefully for non-CLI FIR artifacts (e.g. from K1 tests)
+            error("input artifact is not a Fir2IrCliBasedOutputArtifact")
         }
         val cliArtifact = inputArtifact.cliArtifact
         require(cliArtifact is JKlibFir2IrPipelineArtifact)
+
+        val tempDir = testServices.temporaryDirectoryManager.getOrCreateTempDirectory("jklib-${module.name}")
+        val outputFile = File(tempDir, "result.klib")
+        cliArtifact.configuration.jklibOutputDestination = outputFile.absolutePath
 
         val phaseConfig = PhaseConfig()
         val context = PipelineContext(
@@ -42,7 +48,6 @@ class BackendCliJKlibFacade(testServices: TestServices) :
 
         val diagnosticsReporter = cliArtifact.configuration.diagnosticsCollector
 
-        // Assuming output is "result.klib" as per default in JKlibKlibSerializationPhase
-        return BinaryArtifacts.KLib(File("result.klib"), diagnosticsReporter)
+        return BinaryArtifacts.KLib(outputFile, diagnosticsReporter)
     }
 }
