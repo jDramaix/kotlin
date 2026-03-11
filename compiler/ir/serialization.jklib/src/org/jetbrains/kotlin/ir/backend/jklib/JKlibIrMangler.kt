@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.backend.common.serialization.mangle.MangleMode
 import org.jetbrains.kotlin.backend.common.serialization.mangle.descriptor.DescriptorMangleComputer
 import org.jetbrains.kotlin.backend.common.serialization.mangle.ir.IrMangleComputer
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.CompositeAnnotations
 import org.jetbrains.kotlin.idea.MainFunctionDetector
@@ -32,8 +31,6 @@ import org.jetbrains.kotlin.load.java.typeEnhancement.ENHANCED_NULLABILITY_ANNOT
 import org.jetbrains.kotlin.load.java.typeEnhancement.hasEnhancedNullability
 import org.jetbrains.kotlin.load.kotlin.*
 import org.jetbrains.kotlin.resolve.DescriptorUtils
-import org.jetbrains.kotlin.resolve.jvm.JvmClassName
-import org.jetbrains.kotlin.resolve.jvm.JvmPrimitiveType
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.SimpleType
@@ -133,90 +130,6 @@ class JKlibDescriptorMangler(private val mainDetector: MainFunctionDetector?) : 
 
 fun String.isKotlinPackage(): Boolean {
     return this == "kotlin" || startsWith("kotlin.")
-}
-
-private object JvmTypeFactoryImpl : JvmTypeFactory<JvmType> {
-    private val BOOLEAN = JvmType.Primitive(JvmPrimitiveType.BOOLEAN)
-    private val CHAR = JvmType.Primitive(JvmPrimitiveType.CHAR)
-    private val BYTE = JvmType.Primitive(JvmPrimitiveType.BYTE)
-    private val SHORT = JvmType.Primitive(JvmPrimitiveType.SHORT)
-    private val INT = JvmType.Primitive(JvmPrimitiveType.INT)
-    private val FLOAT = JvmType.Primitive(JvmPrimitiveType.FLOAT)
-    private val LONG = JvmType.Primitive(JvmPrimitiveType.LONG)
-    private val DOUBLE = JvmType.Primitive(JvmPrimitiveType.DOUBLE)
-
-    override fun boxType(possiblyPrimitiveType: JvmType) =
-        when {
-            possiblyPrimitiveType is JvmType.Primitive && possiblyPrimitiveType.jvmPrimitiveType != null ->
-                createObjectType(
-                    JvmClassName.byFqNameWithoutInnerClasses(possiblyPrimitiveType.jvmPrimitiveType!!.wrapperFqName).internalName
-                )
-            else -> possiblyPrimitiveType
-        }
-
-    override fun createFromString(representation: String): JvmType {
-        assert(representation.isNotEmpty()) { "empty string as JvmType" }
-        val firstChar = representation[0]
-
-        JvmPrimitiveType.values().firstOrNull { it.desc[0] == firstChar }?.let {
-            return JvmType.Primitive(it)
-        }
-
-        return when (firstChar) {
-            'V' -> JvmType.Primitive(null)
-            '[' -> JvmType.Array(createFromString(representation.substring(1)))
-            else -> {
-                assert(firstChar == 'L' && representation.endsWith(';')) {
-                    "Type that is not primitive nor array should be Object, but '$representation' was found"
-                }
-
-                JvmType.Object(representation.substring(1, representation.length - 1))
-            }
-        }
-    }
-
-    override fun createPrimitiveType(primitiveType: PrimitiveType): JvmType =
-        when (primitiveType) {
-            PrimitiveType.BOOLEAN -> BOOLEAN
-            PrimitiveType.CHAR -> CHAR
-            PrimitiveType.BYTE -> BYTE
-            PrimitiveType.SHORT -> SHORT
-            PrimitiveType.INT -> INT
-            PrimitiveType.FLOAT -> FLOAT
-            PrimitiveType.LONG -> LONG
-            PrimitiveType.DOUBLE -> DOUBLE
-        }
-
-    override fun createObjectType(internalName: String): JvmType.Object =
-        JvmType.Object(internalName)
-
-    override fun toString(type: JvmType): String =
-        when (type) {
-            is JvmType.Array -> "[" + toString(type.elementType)
-            is JvmType.Primitive -> type.jvmPrimitiveType?.desc ?: "V"
-            is JvmType.Object -> "L" + type.internalName + ";"
-        }
-
-    override val javaLangClassType: JvmType
-        get() = createObjectType("java/lang/Class")
-
-}
-
-internal object TypeMappingConfigurationImpl : TypeMappingConfiguration<JvmType> {
-    override fun commonSupertype(types: Collection<KotlinType>): KotlinType {
-        throw AssertionError("There should be no intersection type in existing descriptors, but found: " + types.joinToString())
-    }
-
-    override fun getPredefinedTypeForClass(classDescriptor: ClassDescriptor): JvmType? = null
-    override fun getPredefinedInternalNameForClass(classDescriptor: ClassDescriptor): String? = null
-
-    override fun preprocessType(kotlinType: KotlinType): KotlinType? {
-        return null
-    }
-
-    override fun processErrorType(kotlinType: KotlinType, descriptor: ClassDescriptor) {
-        // DO nothing
-    }
 }
 
 fun StringBuilder.appendErasedType(type: KotlinType) {
