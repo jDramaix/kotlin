@@ -1,6 +1,6 @@
 // --- START TEMPORARY: KEEP ---
-import org.gradle.internal.jvm.Jvm // TEMPORARY COMMENT: used as part of setting JDK 1.8 in the proguard task
-import java.util.regex.Pattern.quote // TEMPORARY COMMENT: used for all distTasks that copy to rename files
+import org.gradle.internal.jvm.Jvm 
+import java.util.regex.Pattern.quote
 
 description = "JKlib Compiler"
 
@@ -13,9 +13,6 @@ plugins {
     kotlin("jvm") 
 }
 
-
-
-// --- START: kotlin-compiler.jar configurations ---
 val fatJarContents by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
@@ -29,7 +26,7 @@ val fatJarContentsStripVersions by configurations.creating
 
 val compilerVersion by configurations.creating
 
-val builtinsMetadata by configurations.creating // TEMPORARY COMMENT: Keeping for now, and asking jetbrains if its necessary
+val builtinsMetadata by configurations.creating
 
 val api by configurations
 val proguardLibraries by configurations.creating {
@@ -38,22 +35,16 @@ val proguardLibraries by configurations.creating {
 val buildNumber by configurations.creating
 
 val compilerBaseName = name
-// --- END TEMPORARY: KEEP ---
 
-// --- START TEMPORARY: Modify ---
 val compilerModules: Array<String> by rootProject.extra
-// --- END TEMPORARY: Modify ---
 
-// --- START: TEMPORARY: KEEP ---
 configurations.all {
     resolutionStrategy {
         preferProjectModules()
     }
 }
 
-
 dependencies {
-    // --- START: kotlin-compiler.jar dependencies ---
     api(kotlinStdlib("jdk8"))
     api(project(":kotlin-script-runtime"))
     api(commonDependency("org.jetbrains.kotlin:kotlin-reflect")) { isTransitive = false }
@@ -64,17 +55,19 @@ dependencies {
 
     compilerVersion(project(":compiler:compiler.version"))
     proguardLibraries(project(":compiler:compiler.version"))
+
     compilerModules
         .filter { it != ":compiler:compiler.version" } // Version will be added directly to the final jar excluding proguard and relocation
         .forEach {
             fatJarContents(project(it)) { isTransitive = false }
         }
-    // --- END: kotlin-compiler.jar dependencies ---
+
+    // Jklib modules
+    fatJarContents(project(":compiler:cli-jklib")) { isTransitive = false }
+    fatJarContents(project(":compiler:ir.serialization.jklib")) { isTransitive = false }
 
     buildNumber(project(":prepare:build.version", configuration = "buildVersion"))
-    // --- END TEMPORARY: KEEP ---
 
-    // --- START: kotlin-compiler.jar external libraries ---
     fatJarContents(commonDependency("javax.inject"))
     fatJarContents(commonDependency("org.jline", "jline"))
     fatJarContents(commonDependency("org.fusesource.jansi", "jansi"))
@@ -106,12 +99,10 @@ dependencies {
     fatJarContents(libs.antlr.runtime) { isTransitive = false }
     proguardLibraries(libs.antlr.runtime) { isTransitive = false }
 
-    builtinsMetadata(kotlinStdlib())  // TEMPORARY: probably not necessary
+    builtinsMetadata(kotlinStdlib())
     // --- END: kotlin-compiler.jar external libraries ---
 }
 
-// --- TEMPORARY: RESEARCH---
-// sbom for dist
 val distSbomTask = configureSbom(
     target = "Dist",
     documentName = "Kotlin Compiler Distribution",
@@ -121,9 +112,7 @@ val distSbomTask = configureSbom(
         proguardLibraries.name,
     )
 ) 
-// --- END TEMPORARY: RESEARCH---
 
-// --- START: kotlin-compiler.jar packaging tasks ---
 val packCompiler by task<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     destinationDirectory.set(layout.buildDirectory.dir("libs"))
@@ -169,11 +158,9 @@ val packCompiler by task<Jar> {
 val proguard by task<CacheableProguardTask> {
     dependsOn(packCompiler)
 
-    // keep as we depend on the compiler
     javaLauncher.set(project.getToolchainLauncherFor(JdkMajorVersion.JDK_1_8))
 
-    // TEMPORARY: change to - configuration(layout.projectDirectory.file("compiler.pro"))
-    configuration("$projectDir/compiler.pro")
+    configuration(layout.projectDirectory.file("compiler.pro"))
 
     injars(
         mapOf("filter" to """
@@ -237,28 +224,11 @@ val jar = runtimeJar {
     }
 
     manifest.attributes["Class-Path"] = compilerManifestClassPath
-    manifest.attributes["Main-Class"] = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler"
+    manifest.attributes["Main-Class"] = "org.jetbrains.kotlin.cli.jklib.K2JKlibCompiler"
 }
-// --- END: kotlin-compiler.jar packaging tasks ---
 
-
-// --- START: TEMPORARY: REMOVE ---
-sourcesJar {
-    from {
-        compilerModules.map {
-            project(it).mainSourceSet.allSource
-        }
-    }
-
-    dependsOn(":compiler:fir:checkers:generateCheckersComponents", ":compiler:ir.tree:generateTree")
-}
-// --- END TEMPORARY: REMOVE ---
-
-javadocJar()
-
-// --- START: distribution assembly tasks ---
 val distKotlinc = distTask<Sync>("distKotlinc") {
-    destinationDir = File("$distDir/kotlinc")
+    destinationDir = File("$distDir/jklib")
 
     from(buildNumber)
 
@@ -288,7 +258,6 @@ val dist = distTask<Copy>("dist") {
         rename(".*", "${project.name}-${project.version}.spdx.json")
     }
 }
-// --- END: distribution assembly tasks ---
 
 
 inline fun <reified T : AbstractCopyTask> Project.distTask(
