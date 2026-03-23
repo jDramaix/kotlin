@@ -35,58 +35,14 @@ val api by configurations
 val proguardLibraries by configurations.creating {
     extendsFrom(api)
 }
-// --- END TEMPORARY: KEEP ---
-
-// --- START TEMPORARY: REMOVE ---
-// Compiler plugins should be copied without `kotlin-` prefix
-val compilerPlugins by configurations.creating {
-    exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
-
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-val compilerPluginsCompat by configurations.creating {
-    exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
-
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-// --- END TEMPORARY: REMOVE ---
-
 val buildNumber by configurations.creating
 
-
 val compilerBaseName = name
+// --- END TEMPORARY: KEEP ---
 
 // --- START TEMPORARY: Modify ---
 val compilerModules: Array<String> by rootProject.extra
 // --- END TEMPORARY: Modify ---
-
-// --- START TEMPORARY: REMOVE ---
-
-val distCompilerPluginProjects = listOf(
-    ":kotlin-allopen-compiler-plugin",
-    ":plugins:parcelize:parcelize-compiler",
-    ":plugins:parcelize:parcelize-runtime",
-    ":kotlin-noarg-compiler-plugin",
-    ":kotlin-power-assert-compiler-plugin",
-    ":kotlin-sam-with-receiver-compiler-plugin",
-    ":kotlinx-serialization-compiler-plugin",
-    ":kotlin-lombok-compiler-plugin",
-    ":kotlin-assignment-compiler-plugin",
-    ":kotlin-scripting-compiler",
-    ":plugins:compose-compiler-plugin:compiler-hosted",
-)
-val distCompilerPluginProjectsCompat = listOf(
-    ":kotlinx-serialization-compiler-plugin",
-)
-
-val distSourcesProjects = listOfNotNull(
-    ":kotlin-annotations-jvm",
-    ":kotlin-script-runtime",
-    ":kotlin-metadata-jvm",
-)
-// --- END: other distribution projects ---
 
 // --- START: TEMPORARY: KEEP ---
 configurations.all {
@@ -94,7 +50,7 @@ configurations.all {
         preferProjectModules()
     }
 }
-// --- END TEMPORARY: KEEP ---
+
 
 dependencies {
     // --- START: kotlin-compiler.jar dependencies ---
@@ -115,24 +71,8 @@ dependencies {
         }
     // --- END: kotlin-compiler.jar dependencies ---
 
-    // --- START: other distribution dependencies ---
-
-    distCompilerPluginProjects.forEach {
-        compilerPlugins(project(it)) { isTransitive = false }
-    }
-    distCompilerPluginProjectsCompat.forEach {
-        compilerPluginsCompat(
-            project(
-                mapOf(
-                    "path" to it,
-                    "configuration" to "distCompat"
-                )
-            )
-        )
-    }
-
     buildNumber(project(":prepare:build.version", configuration = "buildVersion"))
-    // --- END: other distribution dependencies ---
+    // --- END TEMPORARY: KEEP ---
 
     // --- START: kotlin-compiler.jar external libraries ---
     fatJarContents(commonDependency("javax.inject"))
@@ -177,7 +117,6 @@ val distSbomTask = configureSbom(
     documentName = "Kotlin Compiler Distribution",
     setOf(
         configurations.runtimeClasspath.name,
-        compilerPlugins.name,
         fatJarContents.name, fatJarContentsStripServices.name, fatJarContentsStripMetadata.name, fatJarContentsStripVersions.name,
         proguardLibraries.name,
     )
@@ -323,11 +262,6 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
 
     from(buildNumber)
 
-    val binFiles = files("$rootDir/compiler/cli/bin")
-    into("bin") {
-        from(binFiles)
-    }
-
     val licenseFiles = files("$rootDir/license")
     into("license") {
         from(licenseFiles)
@@ -335,28 +269,8 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
 
     val compilerBaseName = compilerBaseName
     val jarFiles = files(jar)
-    val compilerPluginsFiles = files(compilerPlugins)
-    val compilerPluginsCompatFiles = files(compilerPluginsCompat)
     into("lib") {
-        // --- Compiler JAR ---
         from(jarFiles) { rename { "$compilerBaseName.jar" } }
-
-        // --- Compiler Plugins ---
-        from(compilerPluginsFiles) {
-            rename {
-                // We want to migrate all compiler plugin in 'dist' to have 'kotlin-' prefix
-                // 'kotlin-serialization-compiler-plugin' is a new jar and should have such prefix from the start
-                if (!it.startsWith("kotlin-serialization")) {
-                    it.removePrefix("kotlin-")
-                } else {
-                    it
-                }
-            }
-        }
-        from(compilerPluginsCompatFiles) {
-            rename { it.removePrefix("kotlin-") }
-        }
-
         filePermissions {
             unix("rw-r--r--")
         }
