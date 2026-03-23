@@ -14,7 +14,7 @@ plugins {
     // required to disambiguate attributes of non-jvm Kotlin libraries
     kotlin("jvm") 
 }
-// --- END TEMPORARY: KEEP ---
+
 
 
 // --- START: kotlin-compiler.jar configurations ---
@@ -31,10 +31,8 @@ val fatJarContentsStripVersions by configurations.creating
 
 val compilerVersion by configurations.creating
 
-val builtinsMetadata by configurations.creating // TEMPORARY: Keeping for now (asking jetbrains if its necessary)
-// --- END: kotlin-compiler.jar configurations ---
+val builtinsMetadata by configurations.creating // TEMPORARY COMMENT: Keeping for now, and asking jetbrains if its necessary
 
-// --- START: TEMPORARY: KEEP ---
 val api by configurations
 val proguardLibraries by configurations.creating {
     extendsFrom(api)
@@ -439,7 +437,7 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
 
         // --- Libraries ---
         from(librariesFiles)
-        from(librariesKotlinTestFiles)
+        //from(librariesKotlinTestFiles)
         from(librariesStripVersionFiles) {
             rename {
                 it.replace(Regex("-\\d.*\\.jar\$"), ".jar")
