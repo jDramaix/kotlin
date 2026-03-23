@@ -1,6 +1,4 @@
 // --- START TEMPORARY: KEEP ---
-@file:Suppress("HasPlatformType")
-
 import org.gradle.internal.jvm.Jvm // TEMPORARY COMMENT: used as part of setting JDK 1.8 in the proguard task
 import java.util.regex.Pattern.quote // TEMPORARY COMMENT: used for all distTasks that copy to rename files
 
@@ -40,16 +38,6 @@ val proguardLibraries by configurations.creating {
 // --- END TEMPORARY: KEEP ---
 
 // --- START TEMPORARY: REMOVE ---
-// Libraries to copy to the lib directory
-val libraries by configurations.creating {
-    exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
-}
-
-val librariesStripVersion by configurations.creating
-
-// for sbom only
-val librariesKotlinTest by configurations.creating
-
 // Compiler plugins should be copied without `kotlin-` prefix
 val compilerPlugins by configurations.creating {
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
@@ -63,53 +51,18 @@ val compilerPluginsCompat by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
-
-val sources by configurations.creating {
-    exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
-    isTransitive = false
-}
-
-// contents of dist/maven directory
-val distMavenContents by configurations.creating {
-    isTransitive = false
-}
-// contents of dist/common directory
-val distCommonContents by configurations.creating
-val distStdlibMinimalForTests by configurations.creating
-val buildNumber by configurations.creating
 // --- END TEMPORARY: REMOVE ---
+
+val buildNumber by configurations.creating
 
 
 val compilerBaseName = name
 
-// --- START TEMPORARY: KEEP? ---
+// --- START TEMPORARY: Modify ---
 val compilerModules: Array<String> by rootProject.extra
-// --- END TEMPORARY: KEEP? ---
+// --- END TEMPORARY: Modify ---
 
 // --- START TEMPORARY: REMOVE ---
-val distLibraryProjects = listOfNotNull(
-    ":kotlin-annotation-processing-cli",
-    ":kotlin-annotation-processing-runtime",
-    ":kotlin-annotation-processing",
-    ":kotlin-annotations-jvm",
-    ":kotlin-daemon",
-    ":kotlin-daemon-client",
-    ":kotlin-main-kts",
-    ":kotlin-preloader",
-    // Although, Kotlin compiler is compiled against reflect of an older version (which is bundled into minimal supported IDEA). We put
-    // SNAPSHOT reflect into the dist because we use reflect dist in user code compile classpath (see JvmArgumentsKt.configureStandardLibs).
-    // We can use reflect of a bigger version in Kotlin compiler runtime, because kotlin-reflect follows backwards binary compatibility
-    ":kotlin-reflect",
-    ":kotlin-metadata-jvm",
-    ":kotlin-runner",
-    ":kotlin-script-runtime",
-    ":kotlin-scripting-common",
-    ":kotlin-scripting-compiler",
-    ":kotlin-scripting-compiler-impl",
-    ":kotlin-scripting-jvm",
-    ":libraries:tools:mutability-annotations-compat",
-    ":plugins:jvm-abi-gen"
-)
 
 val distCompilerPluginProjects = listOf(
     ":kotlin-allopen-compiler-plugin",
@@ -163,16 +116,7 @@ dependencies {
     // --- END: kotlin-compiler.jar dependencies ---
 
     // --- START: other distribution dependencies ---
-    libraries(kotlinStdlib("jdk8"))
-    librariesKotlinTest(kotlinTest("junit"))
-    libraries(kotlinStdlib(classifier = "distJsJar"))
-    libraries(kotlinStdlib(classifier = "distJsKlib"))
 
-    librariesStripVersion(libs.kotlinx.coroutines.core) { isTransitive = false }
-
-    distLibraryProjects.forEach {
-        libraries(project(it)) { isTransitive = false }
-    }
     distCompilerPluginProjects.forEach {
         compilerPlugins(project(it)) { isTransitive = false }
     }
@@ -186,24 +130,6 @@ dependencies {
             )
         )
     }
-
-    distSourcesProjects.forEach {
-        sources(project(it, configuration = "sources"))
-    }
-
-    sources(kotlinStdlib("jdk7", classifier = "sources"))
-    sources(kotlinStdlib("jdk8", classifier = "sources"))
-
-    sources(project(":kotlin-stdlib", configuration = "distSources"))
-    sources(project(":kotlin-stdlib", configuration = "distJsSourcesJar"))
-    sources(project(":kotlin-reflect", configuration = "sources"))
-
-    distStdlibMinimalForTests(project(":kotlin-stdlib-jvm-minimal-for-test"))
-
-    distCommonContents(project(":kotlin-stdlib", configuration = "commonMainMetadataElements"))
-    distCommonContents(project(":kotlin-stdlib", configuration = "metadataSourcesElements"))
-
-    distMavenContents(kotlinStdlib(classifier = "sources"))
 
     buildNumber(project(":prepare:build.version", configuration = "buildVersion"))
     // --- END: other distribution dependencies ---
@@ -244,22 +170,6 @@ dependencies {
     // --- END: kotlin-compiler.jar external libraries ---
 }
 
-// --- START TEMPORARY: REMOVE
-/* 
-val librariesKotlinTestFiles = files(
-    listOf(null, "junit", "junit5", "testng", "js").map { suffix ->
-        listOf(null, "sources").map { classifier ->
-            configurations.detachedConfiguration(dependencies.create(kotlinTest(suffix, classifier))).apply {
-                isTransitive = false
-                @OptIn(ExperimentalKotlinGradlePluginApi::class)
-                attributes.attribute(KlibPackaging.ATTRIBUTE, objects.named(KlibPackaging.PACKED))
-            }
-        }
-    }
-)
-*/
-// --- END TEMPORARY: REMOVE ---
-
 // --- TEMPORARY: RESEARCH---
 // sbom for dist
 val distSbomTask = configureSbom(
@@ -267,7 +177,6 @@ val distSbomTask = configureSbom(
     documentName = "Kotlin Compiler Distribution",
     setOf(
         configurations.runtimeClasspath.name,
-        libraries.name, librariesKotlinTest.name, librariesStripVersion.name,
         compilerPlugins.name,
         fatJarContents.name, fatJarContentsStripServices.name, fatJarContentsStripMetadata.name, fatJarContentsStripVersions.name,
         proguardLibraries.name,
@@ -426,26 +335,11 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
 
     val compilerBaseName = compilerBaseName
     val jarFiles = files(jar)
-    val librariesFiles = files(libraries)
-    val librariesStripVersionFiles = files(librariesStripVersion)
-    val sourcesFiles = files(sources)
     val compilerPluginsFiles = files(compilerPlugins)
     val compilerPluginsCompatFiles = files(compilerPluginsCompat)
     into("lib") {
         // --- Compiler JAR ---
         from(jarFiles) { rename { "$compilerBaseName.jar" } }
-
-        // --- Libraries ---
-        from(librariesFiles)
-        //from(librariesKotlinTestFiles)
-        from(librariesStripVersionFiles) {
-            rename {
-                it.replace(Regex("-\\d.*\\.jar\$"), ".jar")
-            }
-        }
-
-        // --- Sources ---
-        from(sourcesFiles)
 
         // --- Compiler Plugins ---
         from(compilerPluginsFiles) {
@@ -469,33 +363,13 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
     }
 }
 
-val distCommon = distTask<Sync>("distCommon") {
-    destinationDir = File("$distDir/common")
-    from(distCommonContents) {
-        rename { name ->
-            name
-                .replace("-metadata.jar", "-common.jar")
-                .replace("-metadata.klib", "-common.klib")
-                .replace("-metadata-sources.jar", "-common-sources.jar")
-        }
-    }
-}
-
-val distMaven = distTask<Sync>("distMaven") {
-    destinationDir = File("$distDir/maven")
-    from(distMavenContents)
-}
-
 val dist = distTask<Copy>("dist") {
     destinationDir = File(distDir)
 
     dependsOn(distKotlinc)
-    dependsOn(distCommon)
-    dependsOn(distMaven)
     dependsOn(distSbomTask)
 
     from(buildNumber)
-    from(distStdlibMinimalForTests)
     from(distSbomTask) {
         rename(".*", "${project.name}-${project.version}.spdx.json")
     }
