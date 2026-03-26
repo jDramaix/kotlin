@@ -301,7 +301,7 @@ include ":kotlin-script-runtime",
         ":prepare:build.version",
         ":kotlin-build-common",
         ":prepare:kotlin-compiler-internal-test-framework",
-        ":jklib-classes",
+        ":kotlin-jklib-compiler",
         ":kotlin-compiler",
         ":kotlin-compiler-embeddable",
         ":kotlin-compiler-client-embeddable",
@@ -831,7 +831,7 @@ project(':kotlin-metadata').projectDir = "$rootDir/libraries/kotlinx-metadata" a
 project(':kotlin-metadata-jvm').projectDir = "$rootDir/libraries/kotlinx-metadata/jvm" as File
 project(':kotlinx-metadata-klib').projectDir = "$rootDir/libraries/kotlinx-metadata/klib" as File
 project(':kotlin-compiler').projectDir = "$rootDir/prepare/compiler" as File
-project(':jklib-classes').projectDir = "$rootDir/prepare/jklib-classes" as File
+project(':kotlin-jklib-compiler').projectDir = "$rootDir/prepare/jklib-compiler" as File
 project(':kotlin-compiler-embeddable').projectDir = "$rootDir/prepare/compiler-embeddable" as File
 project(':kotlin-compiler-client-embeddable').projectDir = "$rootDir/prepare/compiler-client-embeddable" as File
 project(':kotlin-klib-abi-reader').projectDir = "$rootDir/libraries/tools/klib-abi-reader" as File

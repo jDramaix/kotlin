@@ -5,38 +5,32 @@
 
 description = "JKlib Classes packaging script"
 
-/* 
-    Merges :compiler:ir.serialization.jklib and :compiler:cli-jklib jars into jklib-classes.jar
-    and syncs the dist/jklib directory with the merged jar and license files
-    runtimeClasspath from kotlinc's dist for jklib-classes.jar: kotlin-compiler.jar, kotlin-stdlib.jar and kotlin-reflect.jar
-*/
+/*
+ * Merges :compiler:ir.serialization.jklib and :compiler:cli-jklib jars into jklib-classes.jar
+ *  and syncs the dist/jklib directory with the merged jar and license files
+ *  runtimeClasspath from kotlinc's dist for jklib-classes.jar: kotlin-compiler.jar, kotlin-stdlib.jar and kotlin-reflect.jar
+ */
 
 plugins {
     kotlin("jvm")
 }
 
-val distDir = rootProject.layout.projectDirectory.dir("dist")
-val licenseDir = rootProject.layout.projectDirectory.dir("license")
 val buildNumber by configurations.creating
-val jarsToMerge by configurations.creating
+val distContent by configurations.creating
 
 dependencies {
-    runtimeOnly(commonDependency("org.jetbrains.kotlin:kotlin-reflect")) { isTransitive = false }
-    runtimeOnly(kotlinStdlib("jdk8"))   
-    runtimeOnly(project(":kotlin-compiler")) { isTransitive = false }
-
-    jarsToMerge(project(":compiler:cli-jklib")) { isTransitive = false }
-    jarsToMerge(project(":compiler:ir.serialization.jklib")) { isTransitive = false }
+    distContent(project(":compiler:cli-jklib")) { isTransitive = false }
+    distContent(project(":compiler:ir.serialization.jklib")) { isTransitive = false }
 
     buildNumber(project(":prepare:build.version", configuration = "buildVersion"))
 }
 
 val jar by tasks.named<Jar>("jar") {
-    archiveFileName.set("jklib-classes.jar")
+    archiveFileName.set("jklib-compiler.jar")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    dependsOn(jarsToMerge)
-    from({ jarsToMerge.map { zipTree(it) } })
+    dependsOn(distContent)
+    from({ distContent.map { zipTree(it) } })
 
     manifest {
         attributes(
@@ -47,6 +41,9 @@ val jar by tasks.named<Jar>("jar") {
 }
 
 val dist by tasks.registering(Sync::class) {
+    val distDir = rootProject.layout.projectDirectory.dir("dist")
+    val licenseDir = rootProject.layout.projectDirectory.dir("license")
+
     destinationDir = distDir.dir("jklib").asFile
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
